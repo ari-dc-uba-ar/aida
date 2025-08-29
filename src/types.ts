@@ -1,8 +1,8 @@
 export interface Alumno {
-  lu: number;
+  lu: string;
   apellido:string;
   nombres: string;
-  titulo: string | null;
+  titulo: string;
   titulo_en_tramite: string | null;
   egreso: Date;
 }
