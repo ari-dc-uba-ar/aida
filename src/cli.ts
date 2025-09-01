@@ -1,7 +1,15 @@
 import { Client } from 'pg'
-import { QueryResult } from "pg";
+import type { QueryResult } from "pg";
 import { readFile } from 'node:fs/promises';
-import { Alumno } from "./types";
+
+interface Alumno {
+  lu: string;
+  apellido:string;
+  nombres: string;
+  titulo: string;
+  titulo_en_tramite: string | null;
+  egreso: Date;
+}
 
 async function leerYParsearCsv(filePath:string):Promise<{ dataLines: string[]; columns: string[] }>{
     const contents:string = await readFile(filePath, { encoding: 'utf8' });
