@@ -84,9 +84,39 @@ async function cargar(parametro, clientDb: Client){
 
         console.log(query)
     await clientDb.query(query);
+    }
 }
 
+async function obtenerAlumnoConLu(clientDb: Client, luAlumno: string) {
+        const sql: string = `
+    SELECT * FROM aida.alumnos
+    WHERE
+    titulo IS NOT NULL AND
+    titulo_en_tramite IS NOT NULL AND
+    lu = $1`;
+
+    const res: QueryResult<Alumno> = await clientDb.query(sql, [luAlumno]);
+
+    if (res.rows.length > 0){
+        return res.rows[0];
+    } else {
+        return null;
+    }
+
 }
+
+
+async function obtenerCertificadoParaLU(clientDb: Client, parametro: string){
+    const luAlumno = parametro;
+    var alumno: Alumno|null = await obtenerAlumnoConLu(clientDb, luAlumno);
+    if (alumno == null){
+        console.log('No hay alumno con LU:', luAlumno, 'que necesite certificado');
+    } else {
+        await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+    }
+
+}
+
 async function cliComandos(clientDb: Client){
     const comando = process.argv[process.argv.length-2];
     const parametro = process.argv[process.argv.length-1];
@@ -94,13 +124,18 @@ async function cliComandos(clientDb: Client){
     if (comando !== undefined && parametro !== undefined){
 
         if (comando === 'cargar'){
+
             await cargar(parametro,clientDb)
         }
 
         else if (comando === 'fecha'){
+
+
         }
 
         else if (comando === 'LU'){
+
+            await obtenerCertificadoParaLU(clientDb, parametro)
         }
     }
     console.log('parametros a considerar', comando, parametro)
@@ -111,17 +146,20 @@ async function principal():Promise<void>{
     const clientDb:Client = new Client()
     const filePath:string = `recursos/alumnos.csv`;
     await clientDb.connect()
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
+    /*var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
     var alumno: Alumno|null = await obtenerPrimerAlumnoQueNecesitaCertificado(clientDb);
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
     } else {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
-    }
+    }*/
 
     await cliComandos(clientDb);
+
     await clientDb.end()
+
 }
 
-principal();
+
+principal()
