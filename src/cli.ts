@@ -71,6 +71,42 @@ async function generarCertificadoParaAlumno(pathPlantilla: string, alumno: Alumn
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
+async function cargar(parametro, clientDb: Client){
+    const filePath:string = parametro;
+    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
+    for (const line of listaDeAlumnosCompleta) {
+        const values = line.split(',');
+
+        const query = `
+            INSERT INTO aida.alumnos (${columnas.join(', ')})
+            VALUES (${values.map(v => v === '' ? 'null' : `'${v}'`).join(', ')})
+            ON CONFLICT (lu) DO NOTHING`;
+
+        console.log(query)
+    await clientDb.query(query);
+}
+
+}
+async function cliComandos(clientDb: Client){
+    const comando = process.argv[process.argv.length-2];
+    const parametro = process.argv[process.argv.length-1];
+
+    if (comando !== undefined && parametro !== undefined){
+
+        if (comando === 'cargar'){
+            await cargar(parametro,clientDb)
+        }
+
+        else if (comando === 'fecha'){
+        }
+
+        else if (comando === 'LU'){
+        }
+    }
+    console.log('parametros a considerar', comando, parametro)
+}
+
+
 async function principal():Promise<void>{
     const clientDb:Client = new Client()
     const filePath:string = `recursos/alumnos.csv`;
@@ -83,6 +119,8 @@ async function principal():Promise<void>{
     } else {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
     }
+
+    await cliComandos(clientDb);
     await clientDb.end()
 }
 
