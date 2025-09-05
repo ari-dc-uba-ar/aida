@@ -71,13 +71,13 @@ async function generarCertificadoParaAlumno(pathPlantilla: string, alumno: Alumn
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
-async function cargar(parametro, clientDb: Client){
+async function cargar(parametro:string, clientDb: Client):Promise<void>{
     const filePath:string = parametro;
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
     for (const line of listaDeAlumnosCompleta) {
-        const values = line.split(',');
+        const values:string[] = line.split(',');
 
-        const query = `
+        const query:string = `
             INSERT INTO aida.alumnos (${columnas.join(', ')})
             VALUES (${values.map(v => v === '' ? 'null' : `'${v}'`).join(', ')})
             ON CONFLICT (lu) DO NOTHING`;
@@ -87,7 +87,7 @@ async function cargar(parametro, clientDb: Client){
     }
 }
 
-async function obtenerAlumnoConLu(clientDb: Client, luAlumno: string) {
+async function obtenerAlumnoConLu(clientDb: Client, luAlumno: string):Promise<Alumno|null> {
         const sql: string = `
     SELECT * FROM aida.alumnos
     WHERE
@@ -106,13 +106,14 @@ async function obtenerAlumnoConLu(clientDb: Client, luAlumno: string) {
 }
 
 
-async function obtenerCertificadoParaLU(clientDb: Client, parametro: string){
+async function obtenerCertificadoParaLU(clientDb: Client, parametro: string):Promise<void>{
     const luAlumno = parametro;
     var alumno: Alumno|null = await obtenerAlumnoConLu(clientDb, luAlumno);
     if (alumno == null){
         console.log('No hay alumno con LU:', luAlumno, 'que necesite certificado');
     } else {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        await guardarCertificadoEnCarpetaSalida(alumno.lu);
     }
 
 }
@@ -135,6 +136,7 @@ async function obtenerAlumnosConFechaDeTramite(clientDb: Client, fechaDeTramite:
     titulo_en_tramite = $1`;
 
     const res: QueryResult<Alumno> = await clientDb.query(sql, [fechaDeTramite]);
+
 
     if (res.rows.length > 0){
         return res;
