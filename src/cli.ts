@@ -117,6 +117,51 @@ async function obtenerCertificadoParaLU(clientDb: Client, parametro: string){
 
 }
 
+async function guardarCertificadoEnCarpetaSalida(luAlumno: string){
+
+    const luConGuionBajo = luAlumno.replace(/[\/]/g, "_");
+    const certificado = await readFile(`recursos/certificado-para-imprimir.html`, { encoding: 'utf8' });
+    await writeFile(`outputs/certificados/certificadoDe${luConGuionBajo}.html`, certificado, 'utf-8');
+}
+
+
+async function obtenerAlumnosConFechaDeTramite(clientDb: Client, fechaDeTramite: string){
+
+    const sql: string = `
+    SELECT * FROM aida.alumnos
+    WHERE
+    titulo IS NOT NULL AND
+    titulo_en_tramite IS NOT NULL AND
+    titulo_en_tramite = $1`;
+
+    const res: QueryResult<Alumno> = await clientDb.query(sql, [fechaDeTramite]);
+
+    if (res.rows.length > 0){
+        return res;
+    } else {
+        return null;
+    }
+
+}
+
+
+async function generarCertificadosParaFecha(clientDb: Client, parametro: string){
+    const fechaDeTramite = parametro;
+    const alumnos = await obtenerAlumnosConFechaDeTramite(clientDb, fechaDeTramite)
+
+    if (alumnos == null){
+        console.log('No hay alumno con fecha de tramite:', fechaDeTramite, 'que necesite certificado');
+    }
+
+    else{
+        for (const alumno of alumnos.rows){
+            await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+            await guardarCertificadoEnCarpetaSalida(alumno.lu);
+        }
+        console.log('Certificados generados para fecha de tramite:', fechaDeTramite, "guardados en carpeta outputs/certificados");
+    }
+}
+
 async function cliComandos(clientDb: Client){
     const comando = process.argv[process.argv.length-2];
     const parametro = process.argv[process.argv.length-1];
@@ -124,21 +169,19 @@ async function cliComandos(clientDb: Client){
     if (comando !== undefined && parametro !== undefined){
 
         if (comando === 'cargar'){
-
             await cargar(parametro,clientDb)
         }
 
         else if (comando === 'fecha'){
-
-
+            await generarCertificadosParaFecha(clientDb, parametro)
         }
 
         else if (comando === 'LU'){
-
             await obtenerCertificadoParaLU(clientDb, parametro)
         }
+
     }
-    console.log('parametros a considerar', comando, parametro)
+
 }
 
 

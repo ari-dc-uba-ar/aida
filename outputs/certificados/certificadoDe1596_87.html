@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado de Título en Trámite</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .certificate-container {
+            width: 210mm;
+            min-height: 297mm;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30mm;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .border-design {
+            position: absolute;
+            top: 15mm;
+            left: 15mm;
+            right: 15mm;
+            bottom: 15mm;
+            border: 2px solid #c9b036;
+            pointer-events: none;
+        }
+
+        .university-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .university-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .university-subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .certificate-title {
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: #2c3e50;
+            margin: 40px 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .certificate-body {
+            margin: 40px 0;
+            line-height: 1.8;
+            font-size: 18px;
+        }
+
+        .student-data {
+            margin: 30px 0;
+        }
+
+        .data-field {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .data-label {
+            font-weight: bold;
+            min-width: 180px;
+        }
+
+        .signature-area {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .signature-box {
+            text-align: center;
+            width: 40%;
+        }
+
+        .signature-line {
+            border-top: 1px solid #2c3e50;
+            margin: 60px 0 10px;
+        }
+
+        .signature-label {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+
+        .certificate-footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .seal {
+            position: absolute;
+            bottom: 30mm;
+            right: 30mm;
+            opacity: 0.1;
+            font-size: 80px;
+            transform: rotate(15deg);
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .certificate-container {
+                box-shadow: none;
+                width: 100%;
+                height: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <div class="border-design"></div>
+
+        <div class="university-header">
+            <div class="university-name">NOMBRE DE LA FACULTAD</div>
+            <div class="university-subtitle">Dirección completa de la facultad - Ciudad - País</div>
+        </div>
+
+        <div class="certificate-title">Certificado de Título en Trámite</div>
+
+        <div class="certificate-body">
+            <p>El/La abajo firmante, certifica que:</p>
+
+            <div class="student-data">
+                <div class="data-field">
+                    <span class="data-label">Número de Libreta:</span>
+                    <span>1596/87</span>
+                </div>
+                <div class="data-field">
+                    <span class="data-label">Nombre y Apellido:</span>
+                    <span>Platzer Emilio</span>
+                </div>
+                <div class="data-field">
+                    <span class="data-label">Título Obtenido:</span>
+                    <span>Licenciado en Ciencias de la Computación</span>
+                </div>
+                <div class="data-field">
+                    <span class="data-label">Fecha:</span>
+                    <span>Fri Jan 01 1999</span>
+                </div>
+            </div>
+
+            <p>Ha completado satisfactoriamente todos los requisitos académicos correspondientes a la carrera y se encuentra en trámite la expedición de su título oficial.</p>
+
+            <p>Se extiende el presente certificado a solicitud del interesado para los fines que estime convenientes.</p>
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Firma del Autoridad Competente</div>
+            </div>
+
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Sello de la Institución</div>
+            </div>
+        </div>
+
+        <div class="certificate-footer">
+            <p>Certificado emitido electrónamente - Para verificar la autenticidad contactar con [correo de la facultad]</p>
+        </div>
+
+        <div class="seal">SELLO</div>
+    </div>
+</body>
+</html>
