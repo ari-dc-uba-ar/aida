@@ -1,0 +1,103 @@
+{
+  "compilerOptions": {
+    /* Configuración básica del lenguaje */
+    "target": "ES2022",                    // Versión de ECMAScript objetivo
+    "lib": [                               // Librerías disponibles
+      "ES2022",
+      "DOM",
+      "DOM.Iterable",
+      "ESNext.Promise"
+    ],
+    "module": "ESNext",                    // Sistema de módulos
+    "moduleResolution": "node",            // Resolución de módulos estilo Node.js
+    "allowJs": true,                       // Permitir compilar archivos JavaScript
+    "checkJs": true,                       // Verificar tipos en archivos JavaScript
+    "jsx": "react-jsx",                    // Soporte para JSX (ajustar según necesidad)
+
+    /* Configuración de tipos */
+    "types": [],                           // Tipos globales a incluir
+    "typeRoots": ["./node_modules/@types", "./types"], // Rutas para buscar tipos
+
+    /* Configuración de emisión */
+    "declaration": true,                   // Generar archivos .d.ts
+    "declarationMap": true,                // Generar source maps para .d.ts
+    "sourceMap": true,                     // Generar source maps
+    "outDir": "./dist",                    // Directorio de salida
+    "removeComments": false,               // Mantener comentarios
+    "noEmit": false,                       // Permitir emisión de archivos
+    "importHelpers": true,                 // Importar helpers de tslib
+    "downlevelIteration": true,            // Soporte completo para iteración en ES5/ES3
+
+    /* Configuración de interoperabilidad */
+    "allowSyntheticDefaultImports": true,  // Permitir imports default sintéticos
+    "esModuleInterop": true,               // Mejor interoperabilidad con CommonJS
+    "isolatedModules": true,               // Garantizar que cada archivo sea un módulo independiente
+
+    /* Configuración de análisis de código */
+    "strict": true,                        // Habilitar todas las opciones estrictas
+    "noImplicitAny": true,                 // Error en tipos implícitos 'any'
+    "strictNullChecks": true,              // Chequeo estricto de null/undefined
+    "strictFunctionTypes": true,           // Chequeo estricto de tipos de funciones
+    "strictBindCallApply": true,           // Chequeo estricto de bind/call/apply
+    "strictPropertyInitialization": true,  // Chequeo estricto de inicialización de propiedades
+    "noImplicitThis": true,                // Error en 'this' implícito
+    "useUnknownInCatchVariables": true,    // Usar 'unknown' en variables catch
+    "alwaysStrict": true,                  // Parsear en modo estricto y emitir "use strict"
+
+    /* Chequeos adicionales */
+    "noUnusedLocals": true,                // Error en variables locales no usadas
+    "noUnusedParameters": true,            // Error en parámetros no usados
+    "exactOptionalPropertyTypes": true,    // Chequeo exacto de propiedades opcionales
+    "noImplicitReturns": true,             // Error en funciones que no retornan en todos los caminos
+    "noFallthroughCasesInSwitch": true,    // Error en fallthrough en switch
+    "noUncheckedIndexedAccess": true,      // Incluir undefined en acceso indexado
+    "noImplicitOverride": true,            // Error en override implícito
+    "allowUnusedLabels": false,            // Error en labels no usados
+    "allowUnreachableCode": false,         // Error en código inalcanzable
+
+    /* Configuración de calidad de código */
+    "forceConsistentCasingInFileNames": true, // Forzar consistencia en mayúsculas en nombres de archivo
+    "skipLibCheck": true,                  // Saltar chequeo de tipos en archivos de declaración
+    "noErrorTruncation": true,             // No truncar mensajes de error
+
+    /* Configuración experimental */
+    "experimentalDecorators": true,        // Habilitar decoradores (para Angular, TypeORM, etc.)
+    "emitDecoratorMetadata": true,         // Emitir metadata de decoradores
+
+    /* Configuración de paths y base */
+    "baseUrl": "./",                       // Directorio base para resolución de módulos
+    "paths": {                             // Mapeo de paths
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/types/*": ["src/types/*"]
+    }
+  },
+
+  /* Incluir y excluir archivos */
+  "include": [
+    "src/**/*",
+    "tests/**/*",
+    "types/**/*",
+    "*.d.ts"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "*.test.*",
+    "**/*.spec.*"
+  ],
+
+  /* Configuración de compilación incremental */
+  "incremental": true,                     // Habilitar compilación incremental
+  "tsBuildInfoFile": "./.tsbuildinfo",     // Archivo para información de build
+
+  /* Referencias a proyectos */
+  "references": [                          // Para proyectos compuestos
+    // {"path": "./packages/shared"},
+    // {"path": "./packages/client"}
+  ]
+}
