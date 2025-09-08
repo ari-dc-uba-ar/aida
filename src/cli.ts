@@ -61,18 +61,26 @@ async function generarCertificadoParaAlumno(pathPlantilla, alumno){
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
-async function principal(){
-    const clientDb = new Client()
-    const filePath = `recursos/alumnos.csv`;
-    await clientDb.connect()
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
+async function cargarNovedadesAlumnosDesdeCsv(clientDb, archivoCsv){
+    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(archivoCsv)
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
+}
+
+async function generarCertificadoAlumno(clientDb){
     var alumno = await obtenerPrimerAlumnoQueNecesitaCertificado(clientDb);
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
     } else {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
     }
+}
+
+async function principal(){
+    const clientDb = new Client()
+    await clientDb.connect()
+    const filePath = `recursos/alumnos.csv`;
+    await cargarNovedadesAlumnosDesdeCsv(clientDb, filePath);
+    await generarCertificadoAlumno(clientDb);
     await clientDb.end()
 }
 
