@@ -1,7 +1,7 @@
 import { Client } from 'pg'
 import { readFile, writeFile } from 'node:fs/promises';
 
-async function leerYParsearCsv(filePath){
+async function leerYParsearCsv(filePath:string){
     const contents = await readFile(filePath, { encoding: 'utf8' });
     const header = contents.split(/\r?\n/)[0];
     const columns = header.split(',').map(col => col.trim());
@@ -9,7 +9,7 @@ async function leerYParsearCsv(filePath){
     return {dataLines, columns};
 }
 
-async function refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas){
+async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
     for (const line of listaDeAlumnosCompleta) {
         const values = line.split(',');
@@ -23,7 +23,7 @@ async function refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas)
     }
 }
 
-async function obtenerPrimerAlumnoQueNecesitaCertificado(clientDb){
+async function obtenerPrimerAlumnoQueNecesitaCertificado(clientDb: Client):Promise<Record<string, (string|Date)>|null>{
     const sql = `SELECT *
     FROM aida.alumnos
     WHERE titulo IS NOT NULL AND titulo_en_tramite IS NOT NULL
@@ -37,7 +37,7 @@ async function obtenerPrimerAlumnoQueNecesitaCertificado(clientDb){
     }
 }
 
-function pasarAStringODarErrorComoCorresponda(value){
+function pasarAStringODarErrorComoCorresponda(value:string|Date){
     var result = value == null ? '' :
             typeof value == "string" ? value :
             value instanceof Date ? value.toDateString() :
@@ -49,7 +49,7 @@ function pasarAStringODarErrorComoCorresponda(value){
 }
 
 
-async function generarCertificadoParaAlumno(pathPlantilla, alumno){
+async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<string, Date|string>){
     let certificado = await readFile(pathPlantilla, { encoding: 'utf8' });
     for (const [key, value] of Object.entries(alumno)) {
         certificado = certificado.replace(
@@ -61,12 +61,12 @@ async function generarCertificadoParaAlumno(pathPlantilla, alumno){
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
-async function cargarNovedadesAlumnosDesdeCsv(clientDb, archivoCsv){
+async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string){
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(archivoCsv)
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
 }
 
-async function generarCertificadoAlumno(clientDb){
+async function generarCertificadoAlumno(clientDb:Client){
     var alumno = await obtenerPrimerAlumnoQueNecesitaCertificado(clientDb);
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
@@ -75,11 +75,15 @@ async function generarCertificadoAlumno(clientDb){
     }
 }
 
+async function NoImplementadoAun(){
+    console.log("no implementado aun!")
+}
+
 const parametrosPrincipales = [
-    {parametro: 'prueba-primero', cantidadArgumentos: 0},
-    {parametro: 'archivo'       , cantidadArgumentos: 1},
-    {parametro: 'fecha'         , cantidadArgumentos: 1},
-    {parametro: 'lu'            , cantidadArgumentos: 1},
+    {parametro: 'prueba-primero', cantidadArgumentos: 0, accion:generarCertificadoAlumno      },
+    {parametro: 'archivo'       , cantidadArgumentos: 1, accion:cargarNovedadesAlumnosDesdeCsv},
+    {parametro: 'fecha'         , cantidadArgumentos: 1, accion:NoImplementadoAun             },
+    {parametro: 'lu'            , cantidadArgumentos: 1, accion:NoImplementadoAun             },
 ]
 
 const prefijoParametro = '--';
@@ -102,13 +106,15 @@ function parsearParametros(){
 }
 
 async function principal(){
-    var parametros = parsearParametros();
-    console.log('Por procesar', parametros);
+    var listaDeEjecucion = parsearParametros();
+    console.log('Por procesar', listaDeEjecucion);
     const clientDb = new Client()
     await clientDb.connect()
-    const filePath = `recursos/alumnos.csv`;
-    await cargarNovedadesAlumnosDesdeCsv(clientDb, filePath);
-    await generarCertificadoAlumno(clientDb);
+    for (const {parametro, argumentos} of listaDeEjecucion) {
+        console.log('procesando', parametro);
+        const infoParametro = parametrosPrincipales.find(p => p.parametro == parametro);
+        await infoParametro!.accion(clientDb, ...argumentos)
+    }
     await clientDb.end()
 }
 

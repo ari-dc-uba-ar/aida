@@ -77,11 +77,33 @@ En todos los casos, si falta un parámetro obligatorio o su formato es inválido
 
 Si lo corremos vemos:
 ```sh
-> node src\cli.ts --archivo alumnos.csv --fecha 2025-09-20
+> node src\cli.ts --archivo alumnos.csv --fecha 2025-09-20 --fecha 2025-09-22
 Por procesar [
   { parametro: 'archivo', argumentos: [ 'alumnos.csv' ] },
-  { parametro: 'fecha', argumentos: [ '2025-09-20' ] }
+  { parametro: 'fecha', argumentos: [ '2025-09-20' ] },
+  { parametro: 'fecha', argumentos: [ '2025-09-22' ] }
 ]
 ```
 
 Seguido de un error del que no nos vamos a ocupar en este paso.
+
+## 3. Ejecución basada en parámetros
+
+En este punto tenemos la lista de parámetros encontrados y
+podemos iterarla para ejecutra lo que el usuario pide:
+1. Escribo una función para ejecutar cada parámetro.
+Ya tengo una para `archivo` y para `prueba-primero` las uso,
+para las otras simplemente muestro un cartel de "no implementado aún".
+2. En la definición de los paramtros del programa principal
+agrego una propiedad para guardar la función que se va a ejecutar.
+3. Recorro la lista de `{parametro, argumento}` llamanda a la función
+correspndiente de a uno por vez.
+4. De paso agregamos los tipos de todos los parámetros de las funciones.
+
+Ejecuto
+```sh
+> node src\cli.ts --archivo recursos/alumnos.csv --prueba-primero
+```
+y obtengo la misma corrida que obtenía al principio de la clase
+pero ahora en base a procesar los parámetros y eligiendo el nombre del csv.
+
