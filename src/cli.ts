@@ -75,7 +75,35 @@ async function generarCertificadoAlumno(clientDb){
     }
 }
 
+const parametrosPrincipales = [
+    {parametro: 'prueba-primero', cantidadArgumentos: 0},
+    {parametro: 'archivo'       , cantidadArgumentos: 1},
+    {parametro: 'fecha'         , cantidadArgumentos: 1},
+    {parametro: 'lu'            , cantidadArgumentos: 1},
+]
+
+const prefijoParametro = '--';
+
+function parsearParametros(){
+    var i = 0;
+    var parametrosEncontrados:{parametro:string, argumentos:string[]}[] = [];
+    while (i < process.argv.length) {
+        const elemento = process.argv[i];
+        i++;
+        if (elemento.startsWith(prefijoParametro)) {
+            const parametro = elemento.slice(prefijoParametro.length);
+            const infoParametro = parametrosPrincipales.find(p => p.parametro == parametro);
+            if (infoParametro == null) throw new Error(`ERROR: parametro inexistente: ${parametro}`);
+            const argumentos = process.argv.slice(i , i + infoParametro.cantidadArgumentos);
+            parametrosEncontrados.push({parametro, argumentos});
+        }
+    }
+    return parametrosEncontrados;
+}
+
 async function principal(){
+    var parametros = parsearParametros();
+    console.log('Por procesar', parametros);
     const clientDb = new Client()
     await clientDb.connect()
     const filePath = `recursos/alumnos.csv`;

@@ -39,7 +39,7 @@ En todos los casos, si falta un parámetro obligatorio o su formato es inválido
 
 **Si no se especifica ningún modo, el programa debe fallar e informar sobre que es necesario el uso de un modo.**
 
-# Resolución de la cátedra
+# Resolución de la cátedra, pasos
 
 ## 1. Reordenamiento del código
 
@@ -52,3 +52,36 @@ En todos los casos, si falta un parámetro obligatorio o su formato es inválido
 3. Separemos esa funcionalidad en dos funciones.
 4. comprobemos que todos siga andando igual.
 
+## 2. Procesamiento de parámetros
+
+[](https://github.com/ari-dc-uba-ar/aida/commit/)
+
+1. Hay 3 parámetros posibles, cada uno de los tres determinan una acción distinta
+   (o dos, pero una de ellas con un filtro distinto: una fecha o una libreta universitaria)
+2. Para mantener la compatibilidad hacia atrás agreguemos un parámetros más `--prueba-primero`
+   que imprima el primero como hasta ahora.
+3. Parsear los parámetros es simplemente recorrer la lista buscando un `--`,
+   si la palabra que sigue no está en la lista de parámetros debe informarse,
+   si no debe (salvo para `prueba-primero`) tomarse el valor del parámetro
+   y correr la función correspondiente
+4. Pero cuando uno empieza a programar la función que va a parsear los parámetros no todo es tan simple.
+   Por un lado los primeros parámetros corresponden a la invocacion de _node_ y al propio comando _cli.ts_
+   (y eso no está claro que no pueda ser de otro modo).
+   Por otro lado no está dicho si se pueden escribir dos parémtros (ej `--archivo` seguido de `--fecha`)
+   lo cual parecería lógico. Incluso poder usar dos fechas podría parecer útil.
+   No parece descabellado (en el sentido de que no es más complicado de hacer)
+   devolver una lista (arreglo) de los parámetros ya validados.
+5. Armamos la función entonces devolviendo los parámetros encontrados en un arreglo que contiene
+   un par de elementos `{parametro, argumentos}` por ejemplo `[{parametro: 'fecha', argumentos:['2025-08-27']}]`.
+6. Como esto ya es mucho, simplemente vamos a mostrar por pantalla los parámetros.
+
+Si lo corremos vemos:
+```sh
+> node src\cli.ts --archivo alumnos.csv --fecha 2025-09-20
+Por procesar [
+  { parametro: 'archivo', argumentos: [ 'alumnos.csv' ] },
+  { parametro: 'fecha', argumentos: [ '2025-09-20' ] }
+]
+```
+
+Seguido de un error del que no nos vamos a ocupar en este paso.
