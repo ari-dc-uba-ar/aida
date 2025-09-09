@@ -1,10 +1,17 @@
 {
+  "name": "aida",
   "type": "module",
   "dependencies": {
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
     "@types/node": "^24.3.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "mocha": "^11.7.2"
+  },
+  "scripts":{
+    "x-test": "tsc -p tsconfig-test.json && mocha -r ./src/test/setup.js --reporter spec --bail --check-leaks dist/test/test/",
+    "test": "mocha --reporter spec --bail --check-leaks test/test.ts"
   }
 }

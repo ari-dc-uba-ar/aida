@@ -169,4 +169,5 @@ Decidimos entonces que es más conveniente usar una implementación donde no nec
 que almacena las fechas en un `Date` colocándolo las doce de la noche de la hora local.
 
 1. Escribimos una prueba de concepto para verificar qeu entendimos bien cómo se generan los tipos de postgres con [node-postgres](https://node-postgres.com/).
+2. Escribimos una módulo para manejar las fechas
 
