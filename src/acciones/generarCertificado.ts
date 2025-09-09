@@ -2,7 +2,7 @@ import { Client } from 'pg'
 import { readFile, writeFile } from 'node:fs/promises';
 import { sqlLiteral } from '../cli'
 import { DatoAtomico, FiltroAlumnos } from '../types';
-import { aTexto, deTexto, esFecha } from '../fechas'
+import { aTexto, esFecha } from '../fechas'
 import { PATH_PLANTILLA_CERTIFICADOS, PATH_CERTIFICADO_PARA_IMPRIMIR } from '../constantes'
 
 async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>|null>{
@@ -10,7 +10,7 @@ async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:Filt
     FROM aida.alumnos
     WHERE titulo IS NOT NULL AND titulo_en_tramite IS NOT NULL
         ${`lu` in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}
-        ${`fecha` in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}
+        ${`fecha` in filtro ? `AND titulo_en_tramite = TO_DATE(${filtro.fecha}, YYYY-MM-DD)` : ``}
     ORDER BY egreso
 	${`uno` in filtro ? `LIMIT 1` : ``}`;
     const res = await clientDb.query(sql)
@@ -20,6 +20,7 @@ async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:Filt
         return null;
     }
 }
+
 
 function pasarAStringODarErrorComoCorresponda(value:DatoAtomico){
     var result = value == null ? '' :
@@ -61,7 +62,16 @@ export async function generarCertificadoAlumnoLu(clientDb:Client, lu:string){
     return generarCertificadoAlumno(clientDb, {lu})
 }
 
-export async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnTexto:string){
-    const fecha = deTexto(fechaEnTexto)
+
+function esFechaValida(fecha: string): boolean {
+    const fechaValidaRegex = /^\d{4}-\d{2}-\d{2}$/;
+    return fechaValidaRegex.test(fecha)
+  }
+
+export async function generarCertificadoAlumnoFecha(clientDb:Client, fecha:string){
+    if (!esFechaValida(fecha)){
+        throw new Error("El formato de la fecha no es valido. Debes enviar YYYY-MM-DD");
+    }
+
     return generarCertificadoAlumno(clientDb, {fecha})
 }
