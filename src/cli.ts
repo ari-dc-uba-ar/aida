@@ -1,6 +1,7 @@
 import { Client } from 'pg'
 import { readFile, writeFile } from 'node:fs/promises';
-import { Fecha, aISO, aTexto, deTexto, esFecha } from './fechas.js'
+import { aISO, aTexto, deTexto, esFecha } from './fechas.js'
+import { DatoAtomico, FiltroAlumnos } from 'types.js';
 
 async function leerYParsearCsv(filePath:string){
     const contents = await readFile(filePath, { encoding: 'utf8' });
@@ -11,7 +12,6 @@ async function leerYParsearCsv(filePath:string){
     return {dataLines, columns};
 }
 
-type DatoAtomico = string|Fecha|null; // los tipos de los campos de las tablas del sistema
 
 function sqlLiteral(value:DatoAtomico):string{
     const result = value == null ? `null` :
@@ -38,7 +38,6 @@ async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:st
     }
 }
 
-type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true}
 
 async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>|null>{
     const sql = `SELECT *
@@ -135,7 +134,7 @@ function parsearParametros(){
 
 async function principal(){
     var listaDeEjecucion = parsearParametros();
-    console.log('Por procesar', listaDeEjecucion);    
+    console.log('Por procesar', listaDeEjecucion);
     const clientDb = new Client()
     await clientDb.connect()
     for (const {parametro, argumentos} of listaDeEjecucion) {
