@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { sqlLiteral } from '../cli'
 import { DatoAtomico, FiltroAlumnos } from '../types';
 import { aTexto, deTexto, esFecha } from '../fechas'
+import { PATH_PLANTILLA_CERTIFICADOS, PATH_CERTIFICADO_PARA_IMPRIMIR } from '../constantes'
 
 async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>|null>{
     const sql = `SELECT *
@@ -39,7 +40,7 @@ async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<
             pasarAStringODarErrorComoCorresponda(value)
         );
     }
-    await writeFile(`recursos/certificado-para-imprimir.html`, certificado, 'utf-8');
+    await writeFile(PATH_CERTIFICADO_PARA_IMPRIMIR, certificado, 'utf-8');
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
@@ -48,7 +49,7 @@ async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
     } else {
-        await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        await generarCertificadoParaAlumno(PATH_PLANTILLA_CERTIFICADOS, alumno);
     }
 }
 
