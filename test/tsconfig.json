@@ -16,13 +16,24 @@
 
     /* Configuración de tipos */
     "types": [],                           // Tipos globales a incluir
-    "typeRoots": ["./node_modules/@types", "./types"], // Rutas para buscar tipos
+    "typeRoots": [
+      "../../../../../../../../node_modules/@types", 
+      "../../../../../../../node_modules/@types", 
+      "../../../../../../node_modules/@types", 
+      "../../../../../node_modules/@types", 
+      "../../../../node_modules/@types", 
+      "../../../node_modules/@types", 
+      "../../node_modules/@types", 
+      "../node_modules/@types", 
+      "node_modules/@types", 
+      "./types"
+      ], // Rutas para buscar tipos
 
     /* Configuración de emisión */
     "declaration": true,                   // Generar archivos .d.ts
     "declarationMap": true,                // Generar source maps para .d.ts
     "sourceMap": true,                     // Generar source maps
-    "outDir": "../dist",                    // Directorio de salida
+    "outDir": "../dist-test",                    // Directorio de salida
     "removeComments": false,               // Mantener comentarios
     "noEmit": false,                       // Permitir emisión de archivos
     "importHelpers": true,                 // Importar helpers de tslib

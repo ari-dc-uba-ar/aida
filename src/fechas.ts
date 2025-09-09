@@ -1,20 +1,22 @@
 // workarrond de tipos opacos https://github.com/microsoft/TypeScript/issues/202#issuecomment-2052466141
 const simboloParaOpacarFecha = Symbol("simboloParaOpacarFecha");
 
-// export type Fecha = typeof simboloParaOpacarFecha;
-
 export interface Fecha {
     symbol: typeof simboloParaOpacarFecha
 }
 
+function tieneHoraCero(date:Date){
+    return !(date.getHours() || date.getMinutes() || date.getSeconds() || date.getMilliseconds())
+}
+
 function deDate(date: Date): Fecha{
-    if (date.getHours() || date.getMinutes() || date.getSeconds() || date.getMilliseconds()) throw new Error("fecha invalidad");
+    if (!tieneHoraCero(date)) throw new Error("fecha invalidad");
     return date as unknown as Fecha;
 }
 
 function aDate(fecha: Fecha): Date{
     var date = fecha as unknown as Date;
-    if (date.getHours() || date.getMinutes() || date.getSeconds() || date.getMilliseconds()) throw new Error("fecha invalidad");
+    if (!tieneHoraCero(date)) throw new Error("fecha invalidad");
     return date;
 }
 
@@ -47,4 +49,8 @@ export function deISO(texto:string): Fecha{
 
 export function mismaFecha(fecha1:Fecha, fecha2:Fecha){
     return aDate(fecha1).getTime() == aDate(fecha2).getTime()
+}
+
+export function esFecha(fecha:any):fecha is Fecha{
+    return fecha instanceof Date && tieneHoraCero(fecha);
 }

@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-import { deTexto, aTexto, aISO, deISO, mismaFecha, Fecha } from '../src/fechas.ts'
+import { deTexto, aTexto, aISO, deISO, esFecha, mismaFecha, Fecha } from '../src/fechas'
 
 var textoISO = '2025-09-13'
 var textoFecha = '13/09/2025'
@@ -28,10 +28,31 @@ describe("fechas", function(){
 
 describe("tipos fechas", function(){
     var date = new Date(textoISO);
-    it("no reconoce un Date como fecha", function(){
+    it("no reconoce un Date como tipo fecha", function(){
         // @ts-expect-error no se puede asignar un date común en fecha
         var fecha:Fecha = date;
         // @ts-expect-error no se puede pasar un date a una función que recibe fecha
         assert.equal(aTexto(date), aTexto(fecha))
+    })
+    it("discrimina un entero no es fecha", function(){
+        var entero = 7;
+        assert.equal(esFecha(entero), false)
+    })
+    it("discrimina un boolean no es fecha", function(){
+        var logico = false;
+        var nulo = null;
+        assert.equal(esFecha(logico), false)
+    })
+    it("discrimina un nulo no es fecha", function(){
+        var nulo = null;
+        assert.equal(esFecha(nulo), false)
+    })
+    it("discrimina un string no es fecha", function(){
+        var texto = 'texto';
+        assert.equal(esFecha(texto), false)
+    })
+    it("discrimina una fecha sí es fecha", function(){
+        var fecha = deTexto(textoFecha);
+        assert.equal(esFecha(fecha), true)
     })
 })

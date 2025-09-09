@@ -65,7 +65,7 @@ En todos los casos, si falta un parámetro obligatorio o su formato es inválido
    si no debe (salvo para `prueba-primero`) tomarse el valor del parámetro
    y correr la función correspondiente
 4. Pero cuando uno empieza a programar la función que va a parsear los parámetros no todo es tan simple.
-   Por un lado los primeros parámetros corresponden a la invocacion de _node_ y al propio comando _cli.ts_
+   Por un lado los primeros parámetros corresponden a la invocacion de_node_ y al propio comando _cli.ts_
    (y eso no está claro que no pueda ser de otro modo).
    Por otro lado no está dicho si se pueden escribir dos parémtros (ej `--archivo` seguido de `--fecha`)
    lo cual parecería lógico. Incluso poder usar dos fechas podría parecer útil.
@@ -130,9 +130,7 @@ Si ejecutamos:
 ```
 Vemos generarse el certificado de esa LU.
 
-## 5. Agregamos la función para `--fecha`
-
-### Manejo de fechas
+## 5. Manejo de fechas
 
 Las fechas y el Javascript. Ya lo hablamos en clases.
 
@@ -170,4 +168,24 @@ que almacena las fechas en un `Date` colocándolo las doce de la noche de la hor
 
 1. Escribimos una prueba de concepto para verificar qeu entendimos bien cómo se generan los tipos de postgres con [node-postgres](https://node-postgres.com/).
 2. Escribimos una módulo para manejar las fechas
+3. Escribimos nuestro primer test para las fechas
+
+## 6. Agregamos la función para `--fecha`
+
+1. Vamos a incluir el módulo de fechas y usarlo en los lugares que se necesita:
+   1. en sqlLiteral tenemos que poder discriminar si el valor es de tipo Fecha.
+   Eso hay que agregarlo (con su prueba, en el módulo de fechas)
+2. Agregamos en el where de `obtenerAlumnoQueNecesitaCertificado` el manejo del filtro por fecha
+3. Ahora que usamos módulos ya hay que compilar explícitamente el módulo (en la carpeta `./dist`) antes de correrlo:
+
+```
+> npx tsc -p ./src/tsconfig.json
+> node dist/cli.js --archivo recursos/alumnos.csv --fecha 1/1/2022
+```
+
+4. Para correr los tests
+```
+> npm test
+```
+
 

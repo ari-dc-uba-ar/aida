@@ -1,18 +1,22 @@
 import { Client } from 'pg'
 import { readFile, writeFile } from 'node:fs/promises';
+import { Fecha, aISO, aTexto, deTexto, esFecha } from './fechas.js'
 
 async function leerYParsearCsv(filePath:string){
     const contents = await readFile(filePath, { encoding: 'utf8' });
     const header = contents.split(/\r?\n/)[0];
+    if (header == null) throw new Error("archivo .csv vacio");
     const columns = header.split(',').map(col => col.trim());
     const dataLines = contents.split(/\r?\n/).slice(1).filter(line => line.trim() !== '');
     return {dataLines, columns};
 }
 
-function sqlLiteral(value:string|Date|null){
+type DatoAtomico = string|Fecha|null; // los tipos de los campos de las tablas del sistema
+
+function sqlLiteral(value:DatoAtomico):string{
     const result = value == null ? `null` :
         typeof value == "string" ? `'` + value.replace(/'/g, `''`) + `'` :
-        value instanceof Date ? sqlLiteral(value.toString()) : undefined
+        esFecha(value) ? sqlLiteral(aISO(value)) : undefined
     if (result == undefined) {
         console.error("sqlLiteral de tipo no reconocido",value)
         throw new Error("sqlLiteral de tipo no reconocido")
@@ -34,13 +38,14 @@ async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:st
     }
 }
 
-type FiltroAlumnos = {fecha: Date} | {lu: string} | {uno: true}
+type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true}
 
-async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (string|Date)>|null>{
+async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>|null>{
     const sql = `SELECT *
     FROM aida.alumnos
     WHERE titulo IS NOT NULL AND titulo_en_tramite IS NOT NULL
-        ${`lu` in filtro ? `AND lu=${sqlLiteral(filtro.lu)}` : ``}
+        ${`lu` in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}
+        ${`fecha` in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}
     ORDER BY egreso
 	${`uno` in filtro ? `LIMIT 1` : ``}`;
     const res = await clientDb.query(sql)
@@ -51,10 +56,10 @@ async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:Filt
     }
 }
 
-function pasarAStringODarErrorComoCorresponda(value:string|Date){
+function pasarAStringODarErrorComoCorresponda(value:DatoAtomico){
     var result = value == null ? '' :
             typeof value == "string" ? value :
-            value instanceof Date ? value.toDateString() :
+            esFecha(value) ? aTexto(value) :
             null;
     if (result == null){
         throw new Error('No se puede convertir a string el valor: ' + value);
@@ -63,7 +68,7 @@ function pasarAStringODarErrorComoCorresponda(value:string|Date){
 }
 
 
-async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<string, Date|string>){
+async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<string, DatoAtomico>){
     let certificado = await readFile(pathPlantilla, { encoding: 'utf8' });
     for (const [key, value] of Object.entries(alumno)) {
         certificado = certificado.replace(
@@ -97,14 +102,15 @@ async function generarCertificadoAlumnoLu(clientDb:Client, lu:string){
     return generarCertificadoAlumno(clientDb, {lu})
 }
 
-async function NoImplementadoAun(){
-    console.log("no implementado aun!")
+async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnTexto:string){
+    const fecha = deTexto(fechaEnTexto)
+    return generarCertificadoAlumno(clientDb, {fecha})
 }
 
 const parametrosPrincipales = [
     {parametro: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
     {parametro: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
-    {parametro: 'fecha'         , cantidadArgumentos: 1, accion: NoImplementadoAun             },
+    {parametro: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha },
     {parametro: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
 ]
 
@@ -114,7 +120,7 @@ function parsearParametros(){
     var i = 0;
     var parametrosEncontrados:{parametro:string, argumentos:string[]}[] = [];
     while (i < process.argv.length) {
-        const elemento = process.argv[i];
+        const elemento = process.argv[i]!;
         i++;
         if (elemento.startsWith(prefijoParametro)) {
             const parametro = elemento.slice(prefijoParametro.length);
@@ -135,6 +141,7 @@ async function principal(){
     for (const {parametro, argumentos} of listaDeEjecucion) {
         console.log('procesando', parametro);
         const infoParametro = parametrosPrincipales.find(p => p.parametro == parametro);
+        // @ts-ignore `...argumentos` se está pasando acá con ligereza
         await infoParametro!.accion(clientDb, ...argumentos)
     }
     await clientDb.end()

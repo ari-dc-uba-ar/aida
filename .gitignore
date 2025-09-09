@@ -1,6 +1,10 @@
+dist/
+dist-test/
+
 node_modules/
 
 local-*
+*-local.*
 *-local
 
 certificado-para-imprimir.html
