@@ -130,3 +130,43 @@ Si ejecutamos:
 ```
 Vemos generarse el certificado de esa LU.
 
+## 5. Agregamos la función para `--fecha`
+
+### Manejo de fechas
+
+Las fechas y el Javascript. Ya lo hablamos en clases.
+
+Si bien Javascript (y TypeScript) tienen un tipo de datos llamado `Date`, en realida es un tipo _Date time_,
+que si bien podría usarse para almacenar fechas (y se puede), por el tema de los timezones
+(y los cambio de hora en verano e invierno), usar `Date` puede ser complicado y confuso.
+Por ejemplo si almacenamos fechas en `Date` para la hora `00:00` (12 de la noche), tenemos que decidir
+si ese almacenamiento es en la hora universal coordinada (_UTC_) o en la hora local (_GMT-3_ en Buenos Aires).
+La desventaja de _UTC_ es que si uno tiene una fecha `d` no obtener el string de la fecha haciendo:
+`d.getDate()+'/'+d.getMont()+'/'+d.getFullYear()`
+(eso es por varias razones, la primera es que `getMonth` devuelve los meses entre 0 y 11, culpa de Kernighan & Ritchie,
+la segunda es que esas funciones asumen que se quiere trabajar en la zona horaria local).
+Si en cambio trabajamos en la hora local y consideramos que la fecha se almacena con a las 12 de la noche del timezone local,
+el problema es que ya no se puede sumar 24hs (o su equivalente en milisegundos) para sumar un día
+(y no hay una función nativa para sumar un día).
+
+Una manera de tener paz con esto es empezar a diferenciar lo que queremos expresar (almacenar y usar fechas)
+con los detalles de implementación (si usamos Date y cómo o un string o qué).
+Estos detalles de implementación deberían encapsularse de modo que nadie utilice directamente un `Date`
+aunque hayamos elegido que `Date` iba a ser la implementación de fecha.
+
+Vamos a crear entonces un tipo abstracto de datos para eso. Las funciones que necesitamos son:
+Convertores de:
+* _string_ a _Fecha_ para la línea de comandos (querríamos que el usuario pueda cargar en _d/m/y_),
+* _ISO-string_ a _Fecha_ para el intercambio de datos automáticos (ej _.CSV_),
+* _Fecha_ a texto para humanos (o sea _dd/mm/yyyy_)
+* _Fecha_ a _ISO-string_ (o sea yyyy-mm-dd para el _.CSV_)
+Y también hay que ver cómo se trabaja con la base de datos.
+
+Respecto a la base vemos que en la librería que estamos usando [node-postgres](https://github.com/brianc/node-pg-types)
+hay una forma de manejar los tipos y cambiar el comportamiento.
+
+Decidimos entonces que es más conveniente usar una implementación donde no necesitemos tocar [postgres-date](https://www.npmjs.com/package/postgres-date)
+que almacena las fechas en un `Date` colocándolo las doce de la noche de la hora local.
+
+1. Escribimos una prueba de concepto para verificar qeu entendimos bien cómo se generan los tipos de postgres con [node-postgres](https://node-postgres.com/).
+
