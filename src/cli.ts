@@ -2,18 +2,9 @@ import { Client } from 'pg'
 import { readFile, writeFile } from 'node:fs/promises';
 import { aISO, aTexto, deTexto, esFecha } from './fechas.js'
 import { DatoAtomico, FiltroAlumnos } from 'types.js';
+import { cargarNovedadesAlumnosDesdeCsv} from 'acciones/cargarNovedadesAlumnosDesdeCsv.js';
 
-async function leerYParsearCsv(filePath:string){
-    const contents = await readFile(filePath, { encoding: 'utf8' });
-    const header = contents.split(/\r?\n/)[0];
-    if (header == null) throw new Error("archivo .csv vacio");
-    const columns = header.split(',').map(col => col.trim());
-    const dataLines = contents.split(/\r?\n/).slice(1).filter(line => line.trim() !== '');
-    return {dataLines, columns};
-}
-
-
-function sqlLiteral(value:DatoAtomico):string{
+export function sqlLiteral(value:DatoAtomico):string{
     const result = value == null ? `null` :
         typeof value == "string" ? `'` + value.replace(/'/g, `''`) + `'` :
         esFecha(value) ? sqlLiteral(aISO(value)) : undefined
@@ -23,21 +14,6 @@ function sqlLiteral(value:DatoAtomico):string{
     }
     return result;
 }
-
-async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[], columnas:string[]){
-    await clientDb.query("DELETE FROM aida.alumnos");
-    for (const line of listaDeAlumnosCompleta) {
-        const values = line.split(',');
-        const query = `
-            INSERT INTO aida.alumnos (${columnas.join(', ')}) VALUES
-                (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
-        `;
-        console.log(query)
-        const res = await clientDb.query(query)
-        console.log(res.command, res.rowCount)
-    }
-}
-
 
 async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>|null>{
     const sql = `SELECT *
@@ -79,10 +55,7 @@ async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
-async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string){
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(archivoCsv)
-    await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
-}
+
 
 async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
     var alumno = await obtenerAlumnoQueNecesitaCertificado(clientDb, filtro);
