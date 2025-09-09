@@ -4,17 +4,6 @@ import { DatoAtomico } from 'types.js';
 import { cargarNovedadesAlumnosDesdeCsv} from 'acciones/cargarNovedadesAlumnosDesdeCsv.js';
 import { generarCertificadoAlumnoFecha, generarCertificadoAlumnoLu, generarCertificadoAlumnoPrueba } from 'acciones/generarCertificado.js';
 
-export function sqlLiteral(value:DatoAtomico):string{
-    const result = value == null ? `null` :
-        typeof value == "string" ? `'` + value.replace(/'/g, `''`) + `'` :
-        esFecha(value) ? sqlLiteral(aISO(value)) : undefined
-    if (result == undefined) {
-        console.error("sqlLiteral de tipo no reconocido",value)
-        throw new Error("sqlLiteral de tipo no reconocido")
-    }
-    return result;
-}
-
 const parametrosPrincipales = [
     {parametro: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
     {parametro: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
