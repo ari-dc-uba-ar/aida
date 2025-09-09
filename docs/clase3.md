@@ -107,3 +107,26 @@ Ejecuto
 y obtengo la misma corrida que obtenía al principio de la clase
 pero ahora en base a procesar los parámetros y eligiendo el nombre del csv.
 
+## 4. Agregamos la función para `--lu`
+
+Otra vez, antes de copiar y pegar hay que ver qué se puede reutilizar, reorganizar.
+Ya hay una función que busca un alumno y genera el certificado.
+Hay que buscar la forma de pasarle distintos tipos de parámetros a la función `generarCertificadoAlumno`.
+O de indicarle si queremos uno o no (porque la función actual no recibe ninguno más que la conexión a la base de datos).
+1. Definamos al filtro como un objeto que puede tener o bien una libreta o bien una fecha o una indicación de que es el de prueba.
+Eso en _TypeScript_ se podría escribir así `type FiltroAlumnos = {fecha: Date} | {lu: string} | {uno: true}`.
+2. La función cambia de nombre ya no es `obtenerPrimerAlumnoQueNecesitaCertificado` se va el cualificador
+`Primer` (si quiero uno solo le paso `uno` como filtro).
+La función ahora recibe el filtro y agrega en el _WHERE_ la libreta (o `LIMIT 1`, como antes, si quiere uno).
+3. Como esa función necesita poner dentro del SQL el valor ingresado para el usuario
+agregamos una función sqlLiteral, para manejar la **inyección de código** (tema que se va a ver en teórica también).
+4. La función `generarCertificadoAlumno` también recibe un filtro que se lo pasa a `obtenerAlumnoQueNecesitaCertificado`.
+A su vez generamos un par de funciones `generarCertificadoAlumnoPrueba` y `generarCertificadoAlumno`
+que reciben los parámetros tal cual vienen de la línea de comandos y cada una arma el objeto filtro como corresponda.
+
+Si ejecutamos:
+```
+> node src\cli.ts --archivo recursos/alumnos.csv --lu 1602/19
+```
+Vemos generarse el certificado de esa LU.
+

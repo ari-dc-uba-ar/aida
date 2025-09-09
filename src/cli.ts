@@ -9,13 +9,24 @@ async function leerYParsearCsv(filePath:string){
     return {dataLines, columns};
 }
 
+function sqlLiteral(value:string|Date|null){
+    const result = value == null ? `null` :
+        typeof value == "string" ? `'` + value.replace(/'/g, `''`) + `'` :
+        value instanceof Date ? sqlLiteral(value.toString()) : undefined
+    if (result == undefined) {
+        console.error("sqlLiteral de tipo no reconocido",value)
+        throw new Error("sqlLiteral de tipo no reconocido")
+    }
+    return result;
+}
+
 async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
     for (const line of listaDeAlumnosCompleta) {
         const values = line.split(',');
         const query = `
             INSERT INTO aida.alumnos (${columnas.join(', ')}) VALUES
-                (${values.map((value) => value == '' ? 'null' : `'` + value + `'`).join(', ')})
+                (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
         `;
         console.log(query)
         const res = await clientDb.query(query)
@@ -23,12 +34,15 @@ async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:st
     }
 }
 
-async function obtenerPrimerAlumnoQueNecesitaCertificado(clientDb: Client):Promise<Record<string, (string|Date)>|null>{
+type FiltroAlumnos = {fecha: Date} | {lu: string} | {uno: true}
+
+async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (string|Date)>|null>{
     const sql = `SELECT *
     FROM aida.alumnos
     WHERE titulo IS NOT NULL AND titulo_en_tramite IS NOT NULL
+        ${`lu` in filtro ? `AND lu=${sqlLiteral(filtro.lu)}` : ``}
     ORDER BY egreso
-	LIMIT 1`;
+	${`uno` in filtro ? `LIMIT 1` : ``}`;
     const res = await clientDb.query(sql)
     if (res.rows.length > 0){
         return res.rows[0];
@@ -66,8 +80,8 @@ async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
 }
 
-async function generarCertificadoAlumno(clientDb:Client){
-    var alumno = await obtenerPrimerAlumnoQueNecesitaCertificado(clientDb);
+async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
+    var alumno = await obtenerAlumnoQueNecesitaCertificado(clientDb, filtro);
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
     } else {
@@ -75,15 +89,23 @@ async function generarCertificadoAlumno(clientDb:Client){
     }
 }
 
+async function generarCertificadoAlumnoPrueba(clientDb:Client){
+    return generarCertificadoAlumno(clientDb, {uno:true})
+}
+
+async function generarCertificadoAlumnoLu(clientDb:Client, lu:string){
+    return generarCertificadoAlumno(clientDb, {lu})
+}
+
 async function NoImplementadoAun(){
     console.log("no implementado aun!")
 }
 
 const parametrosPrincipales = [
-    {parametro: 'prueba-primero', cantidadArgumentos: 0, accion:generarCertificadoAlumno      },
-    {parametro: 'archivo'       , cantidadArgumentos: 1, accion:cargarNovedadesAlumnosDesdeCsv},
-    {parametro: 'fecha'         , cantidadArgumentos: 1, accion:NoImplementadoAun             },
-    {parametro: 'lu'            , cantidadArgumentos: 1, accion:NoImplementadoAun             },
+    {parametro: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
+    {parametro: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
+    {parametro: 'fecha'         , cantidadArgumentos: 1, accion: NoImplementadoAun             },
+    {parametro: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
 ]
 
 const prefijoParametro = '--';
@@ -107,7 +129,7 @@ function parsearParametros(){
 
 async function principal(){
     var listaDeEjecucion = parsearParametros();
-    console.log('Por procesar', listaDeEjecucion);
+    console.log('Por procesar', listaDeEjecucion);    
     const clientDb = new Client()
     await clientDb.connect()
     for (const {parametro, argumentos} of listaDeEjecucion) {
