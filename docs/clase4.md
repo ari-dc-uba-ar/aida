@@ -69,3 +69,27 @@ Instalo, compilo, seteo las variables de ambiente y genero 2 certificados de una
 > recursos\local-sets.bat
 > node dist/cli --archivo recursos/alumnos.csv --fecha 01/01/2022
 ```
+
+## paso 2 prueba de concepto
+
+Vamos a mirar la documentación de [Node.js para fs.watch](https://nodejs.org/docs/latest-v22.x/api/fs.html#fspromiseswatchfilename-options).
+Activado el [event loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model)[^1]
+_watch_ sirve para ejecutar un función cada vez que se modifique un archivo o una carpeta.
+
+La prueba de contexto está en `poc-await.ts` y tiene lo mínimo, registrar un watcher y consumirlo asincrónicamente en un for
+
+En una consola pongo
+```sh
+> mkdir local-carpeta-observada
+> npm run prepare
+> node dist/poc-watch
+```
+Y se quedará esperando para siempre e irá mostrando los cambios en la carpeta.
+
+Podemos verificarlo abriendo otra consola y poniendo:
+```sh
+> copy .* local-carpeta-observada
+> del local-carpeta-observada\.*
+```
+
+[^1]: Ojo en este artículo que habla de [run to completation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#run-to-completion) que tiene una excepción respecto a las funciones [asincrónicas](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), porque la sintaxis async/await es _sugar sintax_ de usar promesas. O sea cada await implica una función separada a partir de ahí.
