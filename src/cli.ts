@@ -40,7 +40,7 @@ async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:st
 
 type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true}
 
-async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>|null>{
+async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>[]>{
     const sql = `SELECT *
     FROM aida.alumnos
     WHERE titulo IS NOT NULL AND titulo_en_tramite IS NOT NULL
@@ -49,11 +49,7 @@ async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:Filt
     ORDER BY egreso
 	${`uno` in filtro ? `LIMIT 1` : ``}`;
     const res = await clientDb.query(sql)
-    if (res.rows.length > 0){
-        return res.rows[0];
-    } else {
-        return null;
-    }
+    return res.rows;
 }
 
 function pasarAStringODarErrorComoCorresponda(value:DatoAtomico){
@@ -76,7 +72,11 @@ async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<
             pasarAStringODarErrorComoCorresponda(value)
         );
     }
-    await writeFile(`recursos/certificado-para-imprimir.html`, certificado, 'utf-8');
+    const nombreArchivoSalida = `recursos/certificado-de-${
+        // @ts-ignore
+        alumno.lu?.replace(/\W/g,'_') // cambio las barras `/` (o cualquier otro caracter que no sea un alfanumérico) por una raya `_`
+    }-para-imprimir.html`;
+    await writeFile(nombreArchivoSalida, certificado, 'utf-8');
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
@@ -86,10 +86,11 @@ async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string
 }
 
 async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
-    var alumno = await obtenerAlumnoQueNecesitaCertificado(clientDb, filtro);
-    if (alumno == null){
+    var alumnos = await obtenerAlumnoQueNecesitaCertificado(clientDb, filtro);
+    if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado');
-    } else {
+    }
+    for (const alumno of alumnos) {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
     }
 }
@@ -135,7 +136,7 @@ function parsearParametros(){
 
 async function principal(){
     var listaDeEjecucion = parsearParametros();
-    console.log('Por procesar', listaDeEjecucion);    
+    console.log('Por procesar', listaDeEjecucion);
     const clientDb = new Client()
     await clientDb.connect()
     for (const {parametro, argumentos} of listaDeEjecucion) {
