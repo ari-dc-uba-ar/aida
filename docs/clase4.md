@@ -1,4 +1,4 @@
-# Clase 4
+# Clase 4. POLAR: Proceso Orquestador de Lotes Asincrónicos y Reportes
 
 17/9/2025 – 17hs – Aula 1101
 
@@ -93,3 +93,33 @@ Podemos verificarlo abriendo otra consola y poniendo:
 ```
 
 [^1]: Ojo en este artículo que habla de [run to completation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#run-to-completion) que tiene una excepción respecto a las funciones [asincrónicas](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), porque la sintaxis async/await es _sugar sintax_ de usar promesas. O sea cada await implica una función separada a partir de ahí.
+
+## paso 3. Reordenar el código para separar la funcionalidad de la interface
+
+Si queremos mantener la compatibilidad hacia atrás[^2]
+vamos a necesitar que siga existiendo el cli (con sus comandos)
+y tenemos que agregar el servidor que espera comandos dentro de la carpeta de entrada.
+
+Eso va a significar tener dos archivos, el CLI y el POLER.
+Ambos compartiran la funcionalidad común que la pondremos en otro u otros archivos según su función.
+
+1. Dejamos en `cli.ts` solo que que es exclusivo del manejo de la línea de comandos. El resto lo movemos a otros archvios.
+Miremos de abajo para arriba.
+2. La función principal (que es la que arranca el CLI) y el parseador de parámetros quedan en `cli.ts`
+3. Las funciones de generar certificados y cargar novedades de alumnos son el conocimiento específico del sistema
+eso lo vamos a poner en `aida.ts`.
+4. Los parámetros principales, si bien en principio parecen que son del CLI (son los parámetros `--archivo`, etc)
+comparten el nombre y conocimiento de ser los comandos que se reciben en el archivo _.csv_
+así que también los vamos a poner en `aida.ts`
+5. `pasarAStringODarErrorComoCorresponda` es una función que puede servir indpendientemente si estamos en AIDA o no.
+Tiene sentido que esté separado, veo que otras cosas tengo que sacar y decido agregar un archivo llamado
+`tipos-atomicos.ts` que sepa convertir, parsear y tratar los tipos atómicos (los que pueden almacenarse en campos de la db).
+Renombro esa función y la llamo `datoATexto` y paso también `sqlLiteral` y el tipo `DatoAtomico`.
+6. `leerYParsearCsv` va a su propio archivo `csv.ts`, y probablemente haya que cambiar la implementación por una estándar más adelante.
+7. Después del movimiento hay que agregar los `import` necesarios en cada archivo y
+declarar `export` en las funciones que se necesitan en otros archivos; así empezamos a separar la implementación de la `API`.
+
+Volvemos a probar y todo funciona como antes (pero ahora empieza a haber una separación del código).
+
+[^2] y queremos, no solo por cuestiones didácticas, sino porque suele tener sentido.
+En particular en este caso nos va a permitir reordenar el código de una manera que nos va a seguir sirviendo en adelante.
