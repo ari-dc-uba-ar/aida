@@ -14,7 +14,7 @@
   },
   "scripts":{
     "prepare": "tsc -p src/tsconfig.json",
-    "test": "tsc -p test/tsconfig.json && mocha -r ./dist-test/test/setup.js --reporter spec --bail --check-leaks dist-test/test/test.js",
+    "test": "tsc -p test/tsconfig.json && mocha -r ./test/setup.js --reporter spec --bail --check-leaks dist-test/test/test.js",
     "x-test": "mocha --reporter spec --bail --check-leaks test/test.ts"
   }
 }

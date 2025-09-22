@@ -3,3 +3,7 @@ set PGPASSWORD=cambiar_esta_clave
 set PGHOST=localhost
 set PGPORT=5432
 set PGDATABASE=aida_db
+set AIDA_CARPETA_INTERCAMBIO=./local-intercambio
+mkdir .\local-intercambio
+mkdir .\local-intercambio\entrada
+mkdir .\local-intercambio\salida

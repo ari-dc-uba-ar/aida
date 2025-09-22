@@ -47,6 +47,10 @@ export function deISO(texto:string): Fecha{
     return deString(texto, '-', false)
 }
 
+export function deCualquierTexto(texto:string): Fecha{
+    return /-/.test(texto) ? deISO(texto) : deTexto(texto)
+}
+
 export function mismaFecha(fecha1:Fecha, fecha2:Fecha){
     return aDate(fecha1).getTime() == aDate(fecha2).getTime()
 }

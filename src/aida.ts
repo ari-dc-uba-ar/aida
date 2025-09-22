@@ -1,15 +1,16 @@
 import { Client } from "pg"
 import { readFile, writeFile } from "fs/promises"
+import * as Path from 'path';
 
 import { Fecha } from "./fechas.js"
 import * as Fechas from "./fechas.js";
 import { DatoAtomico, datoATexto, sqlLiteral } from "./tipos-atomicos.js"
 import { leerYParsearCsv } from "./csv.js"
+import { DefinicionesDeOperaciones } from "./orquestador.js";
 
-export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[], columnas:string[]){
+export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
-    for (const line of listaDeAlumnosCompleta) {
-        const values = line.split(',');
+    for (const values of listaDeAlumnosCompleta) {
         const query = `
             INSERT INTO aida.alumnos (${columnas.join(', ')}) VALUES
                 (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
@@ -42,15 +43,23 @@ async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<
             datoATexto(value)
         );
     }
-    const nombreArchivoSalida = `recursos/certificado-de-${
+    var nombreArchivoSalida = `certificado-de-${
         // @ts-ignore
         alumno.lu?.replace(/\W/g,'_') // cambio las barras `/` (o cualquier otro caracter que no sea un alfanumérico) por una raya `_`
     }-para-imprimir.html`;
+    if (process.env.AIDA_CARPETA_INTERCAMBIO) {
+        nombreArchivoSalida = Path.join(process.env.AIDA_CARPETA_INTERCAMBIO, 'salida', nombreArchivoSalida);
+    } else {
+        nombreArchivoSalida = Path.join('recursos', nombreArchivoSalida);
+    }
     await writeFile(nombreArchivoSalida, certificado, 'utf-8');
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
 export async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string){
+    if (process.env.AIDA_CARPETA_INTERCAMBIO) {
+        archivoCsv = Path.join(process.env.AIDA_CARPETA_INTERCAMBIO, 'entrada', archivoCsv);
+    }
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(archivoCsv)
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
 }
@@ -58,7 +67,7 @@ export async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv
 async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
     var alumnos = await obtenerAlumnoQueNecesitaCertificado(clientDb, filtro);
     if (alumnos.length == 0){
-        console.log('No hay alumnos que necesiten certificado');
+        console.log('No hay alumnos que necesiten certificado para el filtro', filtro);
     }
     for (const alumno of alumnos) {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
@@ -74,13 +83,13 @@ export async function generarCertificadoAlumnoLu(clientDb:Client, lu:string){
 }
 
 export async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnTexto:string){
-    const fecha = Fechas.deTexto(fechaEnTexto)
+    const fecha = Fechas.deCualquierTexto(fechaEnTexto)
     return generarCertificadoAlumno(clientDb, {fecha})
 }
 
-export const parametrosPrincipales = [
-    {parametro: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
-    {parametro: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
-    {parametro: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha },
-    {parametro: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
+export const operacionesAida: DefinicionesDeOperaciones = [
+    {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
+    {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
+    {operacion: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha },
+    {operacion: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
 ]

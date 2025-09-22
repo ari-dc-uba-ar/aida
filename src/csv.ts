@@ -5,6 +5,6 @@ export async function leerYParsearCsv(filePath:string){
     const header = contents.split(/\r?\n/)[0];
     if (header == null) throw new Error("archivo .csv vacio");
     const columns = header.split(',').map(col => col.trim());
-    const dataLines = contents.split(/\r?\n/).slice(1).filter(line => line.trim() !== '');
+    const dataLines = contents.split(/\r?\n/).slice(1).filter(line => line.trim() !== '').map(line => line.split(','));
     return {dataLines, columns};
 }

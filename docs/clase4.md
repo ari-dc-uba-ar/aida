@@ -123,3 +123,50 @@ Volvemos a probar y todo funciona como antes (pero ahora empieza a haber una sep
 
 [^2] y queremos, no solo por cuestiones didácticas, sino porque suele tener sentido.
 En particular en este caso nos va a permitir reordenar el código de una manera que nos va a seguir sirviendo en adelante.
+
+## paso 4. POLAR a levantar los archivos de la carpeta de entrada!
+
+Hay que definir cómo se configura el nombre y ubicación de las carpetas.
+Sigamos con la línea de configurar en variables de ambiente,
+así que pongamos eso en `local-sets.bat` (o `local-sets.sh` en linux)
+y dejemos un ejemplo en `ejemplo-local-sets.bat`:
+`AIDA_CARPETA_INTERCAMBIO` será la configuración donde poner el path a donde colgarán las carpetas de `entrada` y `salida`.
+
+1. Creamos el archivo `polar.ts` que será el archivo principal del servidor POLAR.
+2. Reutilizamos la función que lee y parse un csv
+3. Controlamos que los nombres de columnas sean los pedidos
+4. Lo que hay que hacer es algo similar a lo que está en la función `principal` del CLI.
+Una vez identificado los tipos de operaciones recibidas y sus argumentos.
+Hay que ejecutar las funcioens correspondientes.
+Por lo tanto extraemos esa parte de la operación principal
+y lo metemos en un un nuevo archivo: `orquestador.ts`
+5. De paso renombramos y llamamos `operacion` a lo que veníamos llamando `parametros`.
+6. Creamos un recurso de prueba llamado `ejemplo-polar.csv`
+y nos encontramos con que el formato de fechas del csv del enunciado está en formato ISO.
+También estaba en formato ISO el enunciado de los parámetros fechas del CLI
+y lo habíamos cambiado porque parecía razonable.
+Podemos, en este punto, decir que en realidad ambos pueden ser posibles tanto para el POLER como para el CLI[^3].
+7. Incorporamos a la funcionalidad esta dualidad.
+
+Volvemos a correr las pruebas del CLI y todo anda igual.
+
+Ahora corremos el POLAR así (volvemos a correr los local-sets que ahora incluyen la creación de la carpeta base
+si no hay que crearla a mano y poner la variable de entorno)
+
+```sh
+> recursos\local-sets.bat
+> del .\local-intercambio\entrada\*.csv
+> del .\local-intercambio\salida\*.html
+> node ./dist/polar.js
+```
+
+y en otra terminal
+```sh
+> copy recursos\alumnos.csv local-intercambio\entrada
+> copy recursos\ejemplo-polar.csv local-intercambio\entrada
+
+```
+
+[^3]: Esto no es obligatorio pero simplifica un poco todo lo que estmamos haciendo.
+Si alguien duda podría intentar decidir otra cosa en este commit y
+ver cómo modificaría el código para lograrlo.
