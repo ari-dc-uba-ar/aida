@@ -88,8 +88,8 @@ export async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnText
 }
 
 export const operacionesAida: DefinicionesDeOperaciones = [
-    {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
-    {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
-    {operacion: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha },
-    {operacion: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
+    {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba, visible: false, descripcion: 'Prueba de la primera operación'},
+    {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv, visible: true,  descripcion: 'Carga novedades de alumnos desde un archivo CSV'},
+    {operacion: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha , visible: true,  descripcion: 'Genera certificado por fecha de trámite'},
+    {operacion: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    , visible: true,  descripcion: 'Genera certificado por LU'},
 ]

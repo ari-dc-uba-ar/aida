@@ -1,6 +1,13 @@
 import { Client } from 'pg';
 
-export type DefinicionDeOperacion = { operacion:string, cantidadArgumentos:number, accion:(clientDb: Client, ...argumentos: string[]) => Promise<void> }
+export type DefinicionDeOperacion = {
+    operacion:string,
+    cantidadArgumentos:number,
+    accion:(clientDb: Client, ...argumentos: string[]) => Promise<void>,
+    descripcion?:string
+    visible?:boolean
+}
+
 export type DefinicionesDeOperaciones = DefinicionDeOperacion[]
 
 export type ElementoDeEjecucion = { operacion:string, argumentos:string[]}

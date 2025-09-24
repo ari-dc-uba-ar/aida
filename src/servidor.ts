@@ -1,5 +1,8 @@
 import express from "express";
 
+import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
+import { operacionesAida } from './aida.js'
+
 const app = express()
 const port = 3000
 
@@ -21,78 +24,6 @@ app.get('/ask', (req, res) => {
 })
 
 // Servidor del frontend:
-const HTML_MENU=
-`<!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-    </head>
-    <body>
-        <h1>AIDA</h1>
-        <p>menu</p>
-        <p><a href="/app/lu">Imprimir certificado por LU</a></p>
-        <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
-        <p><a href="/app/archivo">Subir .csv con novedades de alumnos</a></p>
-        <p><a href="/ask?p=np">¿Es P = NP?</a></p>
-    </body>
-</html>
-`;
-
-app.get('/app/menu', (_, res) => {
-    res.send(HTML_MENU)
-})
-
-const HTML_LU=
-`<!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-    </head>
-    <body>
-        <div>Obtener el certificado de título en trámite</div>
-        <div><label>Libreta Universitaria: <input name=lu></label></div>
-        <button id="btnEnviar">Pedir Certificado</button>
-        <script>
-            window.onload = function() {
-                document.getElementById("btnEnviar").onclick = function() {
-                    var lu = document.getElementsByName("lu")[0].value;
-                    window.location.href = "../api/v0/lu/" + encodeURIComponent(lu);
-                }
-            }
-        </script>
-    </body>
-</html>
-`;
-
-app.get('/app/lu', (_, res) => {
-    res.send(HTML_LU)
-})
-
-const HTML_FECHA=
-`<!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-    </head>
-    <body>
-        <div>Obtener el certificado de título en trámite</div>
-        <div><label>Fecha del trámite: <input name=fecha type=date></label></div>
-        <button id="btnEnviar">Pedir Certificado</button>
-        <script>
-            window.onload = function() {
-                document.getElementById("btnEnviar").onclick = function() {
-                    var fecha = document.getElementsByName("fecha")[0].value;
-                    window.location.href = "../api/v0/fecha/" + encodeURIComponent(fecha);
-                }
-            }
-        </script>
-    </body>
-</html>
-`;
-
-app.get('/app/fecha', (_, res) => {
-    res.send(HTML_FECHA)
-})
 
 const HTML_ARCHIVO=
 `<!DOCTYPE html>
@@ -213,23 +144,58 @@ app.get('/app/archivo-json', (_, res) => {
 
 
 // API DEL BACKEND
-var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
+function apiBackend(operaciones: DefinicionesDeOperaciones) {
 
-app.get('/api/v0/lu/:lu', (req, res) => {
-    console.log(req.params, req.query, req.body);
-    res.status(404).send(NO_IMPLEMENTADO);
-})
+    var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 
-app.get('/api/v0/fecha/:fecha', (req, res) => {
-    console.log(req.params, req.query, req.body);
-    res.status(404).send(NO_IMPLEMENTADO);
-})
+    var menu = '<h1>AIDA API</h1><ul>';
+    for (const operacion of operaciones) {
+        if (operacion.visible) {
+            menu += `<li><a href="./${operacion.operacion}">${operacion.descripcion}</a></li>`;
+        }
 
-app.patch('/api/v0/alumnos', (req, res) => {
-    console.log(req.params, req.query, req.body);
-    res.status(404).send(NO_IMPLEMENTADO);
-})
+        const HTML_PANTALLA=
+        `<!doctype html>
+        <html>
+            <head>
+                <meta charset="utf8">
+            </head>
+            <body>
+                <h2>${operacion.descripcion}</h2>
+                <div><label>${operacion.operacion}: <input name="${operacion.operacion}"></label></div>
+                <button id="btnEnviar">Obtener</button>
+                <script>
+                    window.onload = function() {
+                        document.getElementById("btnEnviar").onclick = function() {
+                            var valor = document.getElementsByName("${operacion.operacion}")[0].value;
+                            window.location.href = "../api/v0/${operacion.operacion}/" + encodeURIComponent(valor);
+                        }
+                    }
+                </script>
+            </body>
+        </html>
+        `;
 
-app.listen(port, () => {
-    console.log(`Example app listening on port http://localhost:${port}/app/menu`)
-})
+        app.get('/app/'+operacion.operacion, (_, res) => {
+            res.send(HTML_PANTALLA);
+        });
+
+        app.get('/api/v0/'+operacion.operacion+'/:arg1', async (req, res) => {
+            console.log(req.params, req.query, req.body);
+            const argumentos = [req.params.arg1 as string];
+            await orquestador(operaciones, [{operacion: operacion.operacion, argumentos }])
+            res.status(404).send(NO_IMPLEMENTADO);
+        })
+    }
+
+    app.get('/app/menu', (_, res) => {
+        res.send(menu)
+    })
+
+    app.listen(port, () => {
+        console.log(`Example app listening on port http://localhost:${port}/app/menu`)
+    })
+
+}
+
+apiBackend(operacionesAida);
