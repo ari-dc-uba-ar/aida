@@ -4,7 +4,7 @@
 
 # CLI con parámetros
 
-**En esta clase, los alumnos intentaron resolver por sí mismos la siguiente consigna.**.
+**En esta clase, los alumnos intentaron resolver por sí mismos la siguiente consigna.**
 Al final estará la resolución de la cátedra, paso a paso, commit a commit.
 
 ## Objetivo de la clase:

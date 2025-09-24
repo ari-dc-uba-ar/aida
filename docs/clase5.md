@@ -33,6 +33,6 @@ Para resolverlo, introducimos una API REST con dos capas:
    - sea consistente,  
    - esté documentado,  
    - y permita representar los datos de los alumnos de manera completa.  
-4.  Se debe mantener la **retrocompatibilidad**. Los endpoints REST deben coexistir con el mecanismo anterior del POLAR y el CLI.  
+4. Se debe mantener la **retrocompatibilidad**. Los endpoints REST deben coexistir con el mecanismo anterior del POLAR y el CLI.  
 5. El frontend debe mostrar páginas HTML simples para interactuar con cada endpoint.  
-6.  Los errores deben devolverse con mensajes claros tanto en la interfaz web como en el API (ej: LU inexistente, fecha inválida, CSV mal formado).  
+6. Los errores deben devolverse con mensajes claros tanto en la interfaz web como en el API (ej: LU inexistente, fecha inválida, CSV mal formado).  
