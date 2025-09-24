@@ -164,26 +164,43 @@ async function generarCertificadosParaFecha(clientDb: Client, parametro: string)
     }
 }
 
-async function cliComandos(clientDb: Client){
-    const comando = process.argv[process.argv.length-2];
-    const parametro = process.argv[process.argv.length-1];
-
+async function ejecutarComando(clientDb: Client, comando:string, parametro:string):Promise<void>{
     if (comando !== undefined && parametro !== undefined){
-
-        if (comando === 'cargar'){
-            await cargar(parametro,clientDb)
-        }
-
-        else if (comando === 'fecha'){
+        if (comando === 'fecha'){
             await generarCertificadosParaFecha(clientDb, parametro)
         }
 
-        else if (comando === 'LU'){
+        else if (comando === 'lu'){
             await obtenerCertificadoParaLU(clientDb, parametro)
         }
 
     }
+}
 
+async function generacion_certificados(clientDb: Client, filePath:string):Promise<void>{
+    const contents:string = await readFile(filePath, { encoding: 'utf8' });
+    const dataLines:string[] = contents.split(/\r?\n/).slice(1).filter(line => line.trim() !== '');
+    let i = 0;
+    while(i < dataLines.length){
+        const [comando, parametro] = dataLines[i].split(',');
+        console.log("Ejecutando comando:", comando, "con parametro:", parametro, "linea:", i, "tamaño total:", dataLines.length);
+        await ejecutarComando(clientDb, comando, parametro);
+        i++;
+    }
+}
+
+async function cliComandos(clientDb: Client, filePath:string):Promise<void>{
+    const comando = process.argv[process.argv.length-2];
+    const parametro = process.argv[process.argv.length-1];
+    if (comando === 'cargar'){
+            await cargar(parametro,clientDb)
+    }
+    else if (comando === 'generacion_certificados'){
+            await generacion_certificados(clientDb, filePath)
+    }
+    else{
+        console.error('Comando no reconocido. Use "cargar <ruta_del_csv>" o "generacion_certificados <ruta_del_csv>"');
+    }
 }
 
 
@@ -199,8 +216,8 @@ async function principal():Promise<void>{
     } else {
         await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
     }*/
-
-    await cliComandos(clientDb);
+    const filePath2:string = `trabajo/generacion_certificados.csv`
+    await cliComandos(clientDb, filePath2);
 
     await clientDb.end()
 
