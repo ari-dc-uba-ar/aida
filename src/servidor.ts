@@ -56,7 +56,7 @@ const HTML_LU=
             window.onload = function() {
                 document.getElementById("btnEnviar").onclick = function() {
                     var lu = document.getElementsByName("lu")[0].value;
-                    window.location.href = "../api/v0/lu/" + lu;
+                    window.location.href = "../api/v0/lu/" + encodeURIComponent(lu);
                 }
             }
         </script>
@@ -82,7 +82,7 @@ const HTML_FECHA=
             window.onload = function() {
                 document.getElementById("btnEnviar").onclick = function() {
                     var fecha = document.getElementsByName("fecha")[0].value;
-                    window.location.href = "../api/v0/fecha/" + fecha;
+                    window.location.href = "../api/v0/fecha/" + encodeURIComponent(fecha);
                 }
             }
         </script>
