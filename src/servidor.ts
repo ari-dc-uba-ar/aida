@@ -2,12 +2,13 @@ import express from "express";
 
 import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
 import { operacionesAida } from './aida.js'
+import { crearApiCrud } from "./crud-basico.js";
 
 const app = express()
 const port = 3000
 
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
-app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // para poder leer el body
 app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
 
 // endpoint de prueba
@@ -199,3 +200,23 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
 }
 
 apiBackend(operacionesAida);
+
+crearApiCrud(app, '/api/v0')
+app.get('/app/alumno', (_, res) => {
+    res.send(`<!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>CSV Upload</title>
+        </head>
+        <body>
+            <h2>loading...</h2>
+            <script src="/app/alumno.js"></script>
+        </body>
+        </html>`
+    )
+});
+
+app.get('/app/alumno.js', (_, res) => {
+    res.sendFile(`${process.cwd()}/dist/alumno.js`);
+});
