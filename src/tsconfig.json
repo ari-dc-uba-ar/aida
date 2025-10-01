@@ -22,7 +22,7 @@
     "declaration": true,                   // Generar archivos .d.ts
     "declarationMap": true,                // Generar source maps para .d.ts
     "sourceMap": true,                     // Generar source maps
-    "outDir": "./dist",                    // Directorio de salida
+    "outDir": "../dist",                    // Directorio de salida
     "removeComments": false,               // Mantener comentarios
     "noEmit": false,                       // Permitir emisión de archivos
     "importHelpers": true,                 // Importar helpers de tslib
@@ -76,10 +76,7 @@
 
   /* Incluir y excluir archivos */
   "include": [
-    "src/**/*",
-    "tests/**/*",
-    "types/**/*",
-    "*.d.ts"
+    "."
   ],
 
   "exclude": [

@@ -3,4 +3,5 @@ node_modules/
 local-*
 *-local
 **/certificado*
-
+dist/
+node_modules/
