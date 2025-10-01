@@ -190,17 +190,37 @@ async function generacion_certificados(clientDb: Client, filePath:string):Promis
 }
 
 async function cliComandos(clientDb: Client, filePath:string):Promise<void>{
-    const comando = process.argv[process.argv.length-2];
-    const parametro = process.argv[process.argv.length-1];
-    if (comando === 'cargar'){
-            await cargar(parametro,clientDb)
+    if (process.argv.length == 4) {
+        const comando = process.argv[process.argv.length-2];
+        const parametro = process.argv[process.argv.length-1];
+        if (comando !== undefined && parametro !== undefined){
+            if (comando === 'fecha'){
+                await generarCertificadosParaFecha(clientDb, parametro)
+            }
+
+            else if (comando === 'lu'){
+                await obtenerCertificadoParaLU(clientDb, parametro)
+            }
+            else if (comando === 'cargar'){
+                await cargar(parametro,clientDb)
+            }
+            else{
+                console.error('Comando no reconocido1. Use "cargar <ruta_del_csv>" o "polar"');
+            }
+        }
+    } else {
+        const comando = process.argv[process.argv.length-1];
+        console.log("Cantidad de argumentos:", process.argv.length);
+        if (comando !== undefined){
+            if (comando === 'polar'){
+                await generacion_certificados(clientDb, filePath)
+            }
+            else{
+                console.error('Comando no reconocido. Use "cargar <ruta_del_csv>" o "polar"');
+            }
+        }
     }
-    else if (comando === 'generacion_certificados'){
-            await generacion_certificados(clientDb, filePath)
-    }
-    else{
-        console.error('Comando no reconocido. Use "cargar <ruta_del_csv>" o "generacion_certificados <ruta_del_csv>"');
-    }
+
 }
 
 
@@ -224,4 +244,4 @@ async function principal():Promise<void>{
 }
 
 
-principal()
+principal();
