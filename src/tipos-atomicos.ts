@@ -1,4 +1,5 @@
 import { Fecha, aISO, aTexto, esFecha } from './fechas.js'
+export type { Fecha } from './fechas.js'
 
 export type DatoAtomico = string|Fecha|null; // los tipos de los campos de las tablas del sistema
 

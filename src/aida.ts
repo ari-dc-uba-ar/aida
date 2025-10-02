@@ -6,7 +6,7 @@ import { Fecha } from "./fechas.js"
 import * as Fechas from "./fechas.js";
 import { DatoAtomico, datoATexto, sqlLiteral } from "./tipos-atomicos.js"
 import { leerYParsearCsv } from "./csv.js"
-import { DefinicionesDeOperaciones } from "./orquestador.js";
+import { DefinicionesDeOperaciones, DefinicionDeOperacion, ParametroDeOperacion } from "./orquestador.js";
 
 export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
@@ -56,11 +56,11 @@ async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<
     console.log('certificado impreso para alumno', alumno.lu);
 }
 
-export async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string){
+export async function cargarNovedadesAlumnosDesdeCsv({clientDb}: {clientDb:Client}, {archivo}: {archivo:string}){
     if (process.env.AIDA_CARPETA_INTERCAMBIO) {
-        archivoCsv = Path.join(process.env.AIDA_CARPETA_INTERCAMBIO, 'entrada', archivoCsv);
+        archivo = Path.join(process.env.AIDA_CARPETA_INTERCAMBIO, 'entrada', archivo);
     }
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(archivoCsv)
+    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(archivo)
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
 }
 
@@ -74,22 +74,48 @@ async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
     }
 }
 
-export async function generarCertificadoAlumnoPrueba(clientDb:Client){
+export async function generarCertificadoAlumnoPrueba({clientDb}:{clientDb:Client}, _:{}){
     return generarCertificadoAlumno(clientDb, {uno:true})
 }
 
-export async function generarCertificadoAlumnoLu(clientDb:Client, lu:string){
+export async function generarCertificadoAlumnoLu({clientDb}:{clientDb:Client}, {lu}:{lu:string}){
     return generarCertificadoAlumno(clientDb, {lu})
 }
 
-export async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnTexto:string){
-    const fecha = Fechas.deCualquierTexto(fechaEnTexto)
+export async function generarCertificadoAlumnoFecha({clientDb}:{clientDb:Client}, {fecha}:{fecha:Fecha}){
     return generarCertificadoAlumno(clientDb, {fecha})
 }
 
-export const operacionesAida: DefinicionesDeOperaciones = [
-    {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba, visible: false, descripcion: 'Prueba de la primera operación'},
-    {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv, visible: true,  descripcion: 'Carga novedades de alumnos desde un archivo CSV'},
-    {operacion: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha , visible: true,  descripcion: 'Genera certificado por fecha de trámite'},
-    {operacion: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    , visible: true,  descripcion: 'Genera certificado por LU'},
-]
+export const operacionesAida = {
+    'prueba-primero': {
+        parametros: {},
+        accion: generarCertificadoAlumnoPrueba,
+        visible: false,
+        descripcion: 'Prueba de la primera operación'
+    },
+    archivo: {
+        parametros:{
+            archivo: {tipo:'string', etiqueta: 'archivo'}
+        },
+        accion: cargarNovedadesAlumnosDesdeCsv,
+        visible: true,
+        descripcion: 'Carga novedades de alumnos desde un archivo CSV'
+    },
+    fecha: {
+        parametros: {
+            fecha: {tipo:'Fecha', etiqueta: 'fecha del trámite'}
+        },
+        accion: generarCertificadoAlumnoFecha,
+        visible: true,
+        descripcion: 'Genera certificado por fecha de trámite'
+    },
+    lu: {
+        parametros: {
+            lu: {tipo:'string', etiqueta: 'libreta universitaria'}
+        },
+        accion: generarCertificadoAlumnoLu,
+        visible: true,
+        descripcion: 'Genera certificado por LU'
+    }
+} satisfies Record<string, DefinicionDeOperacion<Record<string, DatoAtomico>>>;
+
