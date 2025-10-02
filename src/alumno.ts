@@ -20,15 +20,13 @@ function cel(row:HTMLTableRowElement, textContent:string|undefined) {
 }
 
 window.addEventListener('load', async function() {
-    var req = await fetch('http://localhost:3000/api/v0/alumno/');
-    var data = await req.json();
-    console.log(data);
     document.body.innerHTML = ``;
     var table = dom('table', {id:'table-alumnos'}, []) as HTMLTableElement;
     var main = dom('div', {className:'main'}, [
         dom('h1', {}, [text('Alumnos')]),
         table
     ]);
+    document.body.appendChild(main);
     var row = table.insertRow();
     cel(row, 'LU');
     cel(row, 'Apellido');
@@ -36,6 +34,9 @@ window.addEventListener('load', async function() {
     cel(row, 'Título');
     cel(row, 'Título en trámite');
     cel(row, 'Egreso');
+    var req = await fetch('http://localhost:3000/api/v0/alumno/');
+    var data = await req.json();
+    console.log(data);
     data.forEach((alumno:Record<string, string>) => {
         var row = table.insertRow();
         cel(row, alumno.lu);
@@ -45,5 +46,4 @@ window.addEventListener('load', async function() {
         cel(row, alumno.titulo_en_tramite);
         cel(row, alumno.egreso);
     })
-    document.body.appendChild(main);
 })
