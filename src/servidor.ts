@@ -4,6 +4,7 @@ import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
 import { operacionesAida } from './aida.js'
 
 const app = express()
+app.use(express.json());
 const port = 3000
 
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
@@ -24,7 +25,7 @@ app.get('/ask', (req, res) => {
 })
 
 // Servidor del frontend:
-
+/*
 const HTML_ARCHIVO=
 `<!DOCTYPE html>
 <html lang="es">
@@ -38,6 +39,19 @@ const HTML_ARCHIVO=
   <button onclick="handleUpload()">Procesar y Enviar</button>
 
   <script>
+    function parseCSV(text) {
+      const lines = text.trim().split(/\\r?\\n/);
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj = {};
+        headers.forEach((header, i) => {
+          obj[header] = values[i];
+        });
+        return obj;
+      });
+      return data;
+    }
     async function handleUpload() {
       const fileInput = document.getElementById('csvFile');
       const file = fileInput.files[0];
@@ -47,14 +61,15 @@ const HTML_ARCHIVO=
       }
 
       const text = await file.text();
+      const jsonData = parseCSV(text);
 
       try {
         const response = await fetch('../api/v0/alumnos', {
           method: 'PATCH',
           headers: {
-            'Content-Type': 'text/csv'
+            'Content-Type': 'text/json'
           },
-          body: text
+          body: JSON.stringify(jsonData)
         });
 
         if (response.ok) {
@@ -71,9 +86,10 @@ const HTML_ARCHIVO=
 </body>
 </html>
 `;
-
+*/
 app.get('/app/archivo', (_, res) => {
-    res.send(HTML_ARCHIVO)
+    //res.send(HTML_ARCHIVO)
+    res.redirect('/app/archivo-json');
 })
 
 const HTML_ARCHIVO_JSON=
@@ -115,7 +131,7 @@ const HTML_ARCHIVO_JSON=
       const jsonData = parseCSV(text);
 
       try {
-        const response = await fetch('../api/v0/alumnos', {
+        const response = await fetch('/api/v0/alumnos', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json'
@@ -183,7 +199,10 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         app.get('/api/v0/'+operacion.operacion+'/:arg1', async (req, res) => {
             console.log(req.params, req.query, req.body);
             const argumentos = [req.params.arg1 as string];
-            const resultado = await orquestador(operaciones, [{operacion: operacion.operacion, argumentos }])
+            //const htmlDePrueba = '<html><body><h1>¡Llegó el HTML de Prueba!</h1></body></html>';
+            //res.status(200).set('Content-Type', 'text/html').send(htmlDePrueba);
+            const resultado = await orquestador(operaciones, [{operacion: operacion.operacion, argumentos }]);
+            res.set('Content-Type', 'text/html');
             res.status(200).send(resultado);
         })
     }

@@ -3,7 +3,7 @@ import { Client } from 'pg';
 export type DefinicionDeOperacion = {
     operacion:string,
     cantidadArgumentos:number,
-    accion:(clientDb: Client, ...argumentos: string[]) => Promise<void>,
+    accion:(clientDb: Client, ...argumentos: string[]) => Promise<any>,
     descripcion?:string
     visible?:boolean
 }

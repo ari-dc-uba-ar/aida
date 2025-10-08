@@ -54,6 +54,7 @@ async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<
     }
     await writeFile(nombreArchivoSalida, certificado, 'utf-8');
     console.log('certificado impreso para alumno', alumno.lu);
+    return certificado;
 }
 
 export async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv:string){
@@ -66,12 +67,35 @@ export async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv
 
 async function generarCertificadoAlumno(clientDb:Client, filtro:FiltroAlumnos){
     var alumnos = await obtenerAlumnoQueNecesitaCertificado(clientDb, filtro);
+    let htmlCertificadosCombinados = '';
     if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado para el filtro', filtro);
     }
     for (const alumno of alumnos) {
-        await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        const certificadoHtml = await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        htmlCertificadosCombinados += certificadoHtml;
     }
+    const documentoFinal = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Certificados Múltiples</title>
+            <style>
+                /* Opcional: CSS para separación de páginas o impresión */
+                .certificado-container {
+                    page-break-after: always;
+                    padding: 20px;
+                    border: 1px solid #ccc;
+                    margin-bottom: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            ${htmlCertificadosCombinados}
+        </body>
+        </html>
+    `;
+    return documentoFinal;
 }
 
 export async function generarCertificadoAlumnoPrueba(clientDb:Client){
