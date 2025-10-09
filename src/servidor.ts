@@ -1,7 +1,8 @@
 import express from "express";
 
+
 import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
-import { operacionesAida } from './aida.js'
+import { cargarNovedadesAlumnosDesdeJson, operacionesAida } from './aida.js'
 
 const app = express()
 app.use(express.json());
@@ -199,11 +200,32 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         app.get('/api/v0/'+operacion.operacion+'/:arg1', async (req, res) => {
             console.log(req.params, req.query, req.body);
             const argumentos = [req.params.arg1 as string];
-            //const htmlDePrueba = '<html><body><h1>¡Llegó el HTML de Prueba!</h1></body></html>';
-            //res.status(200).set('Content-Type', 'text/html').send(htmlDePrueba);
+            const htmlVacio =
+               `<!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Certificados Múltiples</title>
+                    <style>
+                        .certificado-container {
+                          page-break-after: always;
+                          padding: 20px;
+                          border: 1px solid #ccc;
+                          margin-bottom: 20px;
+                      }
+                    </style>
+                </head>
+                <body>
+
+                </body>
+                </html>`.replace(/\s/g, '');
             const resultado = await orquestador(operaciones, [{operacion: operacion.operacion, argumentos }]);
-            res.set('Content-Type', 'text/html');
-            res.status(200).send(resultado);
+            const resultadoLimpio = resultado ? resultado.replace(/\s/g, '') : '';
+            if (!resultado || resultadoLimpio === htmlVacio) {
+              res.status(404).send('No hay alumnos que necesiten certificado para ese filtro');
+            }else{
+              res.set('Content-Type', 'text/html');
+              res.status(200).send(resultado);
+            }
         })
     }
 
@@ -211,9 +233,18 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         res.send(menu)
     })
 
+    app.patch('/api/v0/alumnos', async (req, res) => {
+        const alumnosJson = req.body;
+        await cargarNovedadesAlumnosDesdeJson(alumnosJson);
+        res.status(200).send('<h1>Carga de datos JSON exitosa!</h1>');
+
+
+    });
+
     app.listen(port, () => {
         console.log(`Example app listening on port http://localhost:${port}/app/menu`)
     })
+
 
 }
 
