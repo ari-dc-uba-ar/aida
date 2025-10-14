@@ -35,7 +35,7 @@
     transform: translateY(-1px);
 }
 #table-alumnos .boton-borrar {
-    background-color: #dc3545; /* Rojo para borrar */
+    background-color: #dc3545; 
     color: #fff;
     padding: 6px 12px;
     border: none;
@@ -51,80 +51,80 @@
 }
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f7f6; /* Fondo gris claro suave */
+    background-color: #f4f7f6; 
     color: #333;
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center; /* Centra el contenido en el cuerpo */
+    justify-content: center; 
     min-height: 100vh;
 }
 
 .main {
-    width: 90%; /* Ancho máximo para el contenedor principal */
-    max-width: 1200px; /* Limita el ancho en pantallas grandes */
+    width: 90%; 
+    max-width: 1200px; 
     margin-top: 40px;
     padding: 20px;
     background-color: #fff;
-    border-radius: 10px; /* Bordes redondeados */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Sombra elegante */
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); 
 }
 
 h1 {
-    color: #007bff; /* Color primario azul */
+    color: #007bff;
     border-bottom: 2px solid #007bff;
     padding-bottom: 10px;
     margin-bottom: 30px;
     text-align: center;
 }
 
-/* --- ESTILOS DE LA TABLA DINÁMICA --- */
+
 
 #table-alumnos {
     width: 100%;
-    border-collapse: separate; /* Permite bordes redondeados y espacio */
+    border-collapse: separate; 
     border-spacing: 0;
     font-size: 0.9em;
 }
 
-/* Cabecera (th) */
-#table-alumnos tr:first-child td { /* Selecciona las celdas de la primera fila (los encabezados) */
+
+#table-alumnos tr:first-child td { 
     background-color: #007bff;
     color: white;
     font-weight: 600;
     padding: 12px 18px;
     text-align: left;
-    /* Redondea solo las esquinas superiores de la cabecera */
+    
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
-    position: sticky; /* Fija la cabecera al hacer scroll */
+    position: sticky;
     top: 0;
     z-index: 10;
 }
 
-/* Filas de datos */
-#table-alumnos tr:not(:first-child) { /* Aplica a todas las filas excepto la primera (cabecera) */
+
+#table-alumnos tr:not(:first-child) { 
     border-bottom: 1px solid #e0e0e0;
 }
 
-/* Efecto de cebra */
+
 #table-alumnos tr:nth-child(even):not(:first-child) {
-    background-color: #f8f8f8; /* Color suave para filas pares */
+    background-color: #f8f8f8; 
 }
 
-/* Efecto hover */
+
 #table-alumnos tr:hover:not(:first-child) {
-    background-color: #e6f7ff; /* Azul claro al pasar el ratón */
+    background-color: #e6f7ff; 
     cursor: default;
 }
 
-/* Celdas de datos */
+
 #table-alumnos td {
     padding: 10px 18px;
     vertical-align: middle;
 }
 
-/* Estilo especial para valores 'null' o '-' */
+
 #table-alumnos td:empty::after,
 #table-alumnos td:has(> .placeholder) {
     content: '-';
@@ -132,16 +132,16 @@ h1 {
     font-style: italic;
 }
 #table-alumnos .boton-editar {
-    /* Estilo visual */
-    background-color: #ffc107; /* Amarillo para la acción de editar */
-    color: #333; /* Texto oscuro */
+   
+    background-color: #ffc107; 
+    color: #333; 
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
 
-    /* Animación */
+    
     transition: background-color 0.2s, transform 0.1s;
 }
 
