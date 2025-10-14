@@ -18,8 +18,5 @@ export async function leerYParsearJson(alumnosJson:any[]){
         });
     });
 
-    console.log("JSON PARSEADO a formato tabular. Columnas:", columns);
-    console.log("JSON PARSEADO a formato tabular. Filas:", dataLines);
-
     return { dataLines, columns };
 }
