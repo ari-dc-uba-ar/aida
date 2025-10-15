@@ -349,16 +349,6 @@ const HTML_EDITAR = `
             box-sizing: border-box;
         }
 
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
         button {
             background-color: #28a745;
             color: white;
