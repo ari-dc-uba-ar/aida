@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Alumnos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sort-asc::after {
+            content: '↑';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        th.sort-desc::after {
+            content: '↓';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #f1f8ff;
+        }
+        .actions {
+            white-space: nowrap;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .btn-edit {
+            background-color: #f39c12;
+        }
+        .btn-edit:hover {
+            background-color: #d68910;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        #alumnoForm {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            max-width: 600px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-actions {
+            margin-top: 20px;
+        }
+        .alert {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Alumnos</h1>
+
+    <div id="alert" class="alert"></div>
+
+    {{#if alumnos.length}}
+        <div style="overflow-x: auto;">
+            <table id="alumnosTable">
+                <thead>
+                    <tr>
+                        {{#each columnas}}
+                            <th>{{this}}</th>
+                        {{/each}}
+                        <th class="actions">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each alumnos}}
+                        <tr data-lu="{{this.lu}}">
+                            {{#each this}}
+                                <td>{{this}}</td>
+                            {{/each}}
+                            <td class="actions">
+                                <button class="btn-edit" data-lu="{{this.lu}}">Editar</button>
+                                <button class="btn-delete" data-lu="{{this.lu}}">Eliminar</button>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    {{else}}
+        <p>No hay alumnos registrados.</p>
+    {{/if}}
+
+    <div style="margin-top: 40px;">
+        <h2 id="form-title">Agregar Nuevo Alumno</h2>
+        <form id="alumnoForm">
+            <input type="hidden" id="lu" name="lu">
+
+            <div class="form-group">
+                <label for="lu_input">LU (Legajo Único):</label>
+                <input type="text" id="lu_input" name="lu" required>
+            </div>
+
+            <div class="form-group">
+                <label for="apellido">Apellido:</label>
+                <input type="text" id="apellido" name="apellido" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nombres">Nombres:</label>
+                <input type="text" id="nombres" name="nombres" required>
+            </div>
+
+            <div class="form-group">
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" name="titulo">
+            </div>
+
+            <div class="form-group">
+                <label for="titulo_en_tramite">Título en Trámite:</label>
+                <input type="date" id="titulo_en_tramite" name="titulo_en_tramite">
+            </div>
+
+            <div class="form-group">
+                <label for="egreso">Fecha de Egreso:</label>
+                <input type="date" id="egreso" name="egreso">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="submitBtn">Guardar</button>
+                <button type="button" id="cancelBtn" style="display: none; margin-left: 10px;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let isEditing = false;
+        let currentLu = null;
+
+        // Mostrar mensaje de alerta
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.display = 'block';
+
+            // Ocultar después de 5 segundos
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Cargar la lista de alumnos
+        async function loadAlumnos() {
+            try {
+                const response = await fetch('/api/v0/alumnos');
+                if (!response.ok) {
+                    throw new Error('Error al cargar los alumnos');
+                }
+                const alumnos = await response.json();
+                renderAlumnos(alumnos);
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+                showAlert('Error al cargar la lista de alumnos', 'error');
+            }
+        }
+
+        // Renderizar la tabla de alumnos
+        function renderAlumnos(alumnos) {
+            const tbody = document.querySelector('#alumnosTable tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            alumnos.forEach(alumno => {
+                const tr = document.createElement('tr');
+                tr.dataset.lu = alumno.lu;
+
+                // Agregar celdas con los datos del alumno
+                Object.values(alumno).forEach(valor => {
+                    const td = document.createElement('td');
+                    td.textContent = valor || '';
+                    tr.appendChild(td);
+                });
+
+                // Agregar botones de acción
+                const actionsTd = document.createElement('td');
+                actionsTd.className = 'actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Editar';
+                editBtn.className = 'btn-edit';
+                editBtn.onclick = () => editAlumno(alumno);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Eliminar';
+                deleteBtn.className = 'btn-delete';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteAlumno(alumno.lu);
+                };
+
+                actionsTd.appendChild(editBtn);
+                actionsTd.appendChild(deleteBtn);
+                tr.appendChild(actionsTd);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Manejar envío del formulario
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const alumnoData = {};
+            formData.forEach((value, key) => {
+                if (value) alumnoData[key] = value;
+            });
+
+            try {
+                let response;
+                if (isEditing) {
+                    // Actualizar alumno existente
+                    const encodedLu = encodeURIComponent(currentLu);
+                    response = await fetch(`/api/v0/alumnos/${encodedLu}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(alumnoData)
+                    });
+                } else {
+                    // Crear nuevo alumno
+                    response = await fetch('/api/v0/alumnos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(alumnoData)
+                    });
+                }
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al guardar el alumno');
+                }
+
+                // Mostrar mensaje de éxito
+                showAlert(
+                    isEditing ? 'Alumno actualizado correctamente' : 'Alumno creado correctamente',
+                    'success'
+                );
+
+                // Recargar la lista de alumnos
+                await loadAlumnos();
+
+                // Limpiar el formulario
+                resetForm();
+
+            } catch (error) {
+                console.error('Error al guardar el alumno:', error);
+                showAlert(error.message || 'Error al guardar el alumno', 'error');
+            }
+        }
+
+        // Editar un alumno
+        function editAlumno(alumno) {
+            isEditing = true;
+            currentLu = alumno.lu;
+
+            // Llenar el formulario con los datos del alumno
+            document.getElementById('lu').value = alumno.lu || '';
+            document.getElementById('lu_input').value = alumno.lu || '';
+            document.getElementById('apellido').value = alumno.apellido || '';
+            document.getElementById('nombres').value = alumno.nombres || '';
+            document.getElementById('titulo').value = alumno.titulo || '';
+            // Formatear fechas al formato YYYY-MM-DD para los inputs de tipo date
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            };
+
+            document.getElementById('titulo_en_tramite').value = formatDate(alumno.titulo_en_tramite);
+            document.getElementById('egreso').value = formatDate(alumno.egreso);
+
+            // Actualizar la interfaz
+            document.getElementById('form-title').textContent = 'Editar Alumno';
+            document.getElementById('submitBtn').textContent = 'Actualizar';
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+
+            // Desplazarse al formulario
+            document.getElementById('alumnoForm').scrollIntoView({ behavior: 'smooth' });
+
+            // Deshabilitar el campo LU en modo edición
+            document.getElementById('lu_input').disabled = true;
+        }
+
+        // Eliminar un alumno
+        async function deleteAlumno(lu) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este alumno?')) {
+                return;
+            }
+
+            try {
+                const encodedLu = encodeURIComponent(lu);
+                const response = await fetch(`/api/v0/alumnos/${encodedLu}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al eliminar el alumno');
+                }
+
+                // Mostrar mensaje de éxito
+                showAlert('Alumno eliminado correctamente', 'success');
+
+                // Recargar la lista de alumnos
+                await loadAlumnos();
+
+                // Si estábamos editando el alumno eliminado, limpiar el formulario
+                if (currentLu === lu) {
+                    resetForm();
+                }
+
+            } catch (error) {
+                console.error('Error al eliminar el alumno:', error);
+                showAlert(error.message || 'Error al eliminar el alumno', 'error');
+            }
+        }
+
+        // Limpiar el formulario
+        function resetForm() {
+            const form = document.getElementById('alumnoForm');
+            form.reset();
+            isEditing = false;
+            currentLu = null;
+            document.getElementById('form-title').textContent = 'Agregar Nuevo Alumno';
+            document.getElementById('submitBtn').textContent = 'Guardar';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('lu_input').disabled = false;
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar la lista de alumnos al iniciar
+            loadAlumnos();
+
+            // Manejar envío del formulario
+            const form = document.getElementById('alumnoForm');
+            if (form) {
+                form.addEventListener('submit', handleSubmit);
+            }
+
+            // Manejar botón de cancelar
+            const cancelBtn = document.getElementById('cancelBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', resetForm);
+            }
+
+            // Sincronizar campos LU oculto y visible
+            const luInput = document.getElementById('lu_input');
+            const hiddenLu = document.getElementById('lu');
+            if (luInput && hiddenLu) {
+                luInput.addEventListener('input', (e) => {
+                    hiddenLu.value = e.target.value;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
