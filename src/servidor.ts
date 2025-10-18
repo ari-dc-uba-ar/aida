@@ -227,7 +227,11 @@ const alumnosTemplate = Handlebars.compile(templateSource);
 // Función para obtener la conexión a la base de datos
 async function getDbClient() {
     const client = new Client({
-        connectionString: process.env.DATABASE_URL
+        host: process.env.PGHOST,
+        port: parseInt(process.env.PGPORT || '5432'),
+        database: process.env.PGDATABASE,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD
     });
     await client.connect();
     return client;
