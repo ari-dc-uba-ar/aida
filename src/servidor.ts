@@ -259,7 +259,7 @@ app.get('/app/alumnos', requireAuth, async (_, res) => {
 
         // Preparar los datos para la plantilla
         const columnas = Object.keys(alumnos[0] as Record<string, unknown>);
-        const alumnosData = alumnos.map(alumno => {
+        const alumnosData = alumnos.map((alumno: Record<string, unknown>) => {
             const row: Record<string, string> = {};
             columnas.forEach(col => {
                 row[col] = alumno[col] !== null && alumno[col] !== undefined ? String(alumno[col]) : '';
