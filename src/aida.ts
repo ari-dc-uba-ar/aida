@@ -8,6 +8,12 @@ import { DatoAtomico, datoATexto, sqlLiteral } from "./tipos-atomicos.js"
 import { leerYParsearCsv } from "./csv.js"
 import { DefinicionesDeOperaciones } from "./orquestador.js";
 
+export async function obtenerTodosLosAlumnos(clientDb: Client): Promise<Record<string, DatoAtomico>[]> {
+    const sql = `SELECT * FROM aida.alumnos ORDER BY lu`;
+    const res = await clientDb.query(sql);
+    return res.rows;
+}
+
 export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
     for (const values of listaDeAlumnosCompleta) {
