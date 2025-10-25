@@ -453,8 +453,9 @@ const HTML_EDITAR = `
         document.getElementById('estado_tramite_actual').textContent = enTramite ? 'No' : alumno.titulo_en_tramite.slice(0, 10);
         document.getElementById('nuevoEstadoTramiteTitulo').value = enTramite ? 'dd/mm/yy' : alumno.titulo_en_tramite.slice(0, 10);
 
-        document.getElementById('fecha_egreso').textContent = alumno.egreso.slice(0, 10);
-        document.getElementById('nuevaFechaDeEgreso').value = alumno.egreso.slice(0, 10);
+        const seEgreso = alumno.egreso === null;
+        document.getElementById('fecha_egreso').textContent = seEgreso ? 'No' : alumno.egreso.slice(0, 10);
+        document.getElementById('nuevaFechaDeEgreso').value = seEgreso ? 'dd/mm/yy' : alumno.egreso.slice(0, 10);
 
     }
 
@@ -469,7 +470,7 @@ window.onload = async function() {
     const luActual = getLuFromUrl();
     try {
 
-        var req = await fetch('http://localhost:3000/api/v0/alumno/editarAlumno/' + encodeURIComponent(luActual),{
+        var req = await fetch('http://localhost:3000/api/v0/alumnos/' + encodeURIComponent(luActual),{
             method: 'GET'
         });
         var data = await req.json();
@@ -488,10 +489,10 @@ window.onload = async function() {
             nombres: form.nombres.value,
             titulo: form.titulo.value,
             titulo_en_tramite: form.titulo_en_tramite.value || null,
-            egreso: form.egreso.value
+            egreso: form.egreso.value || null
         };
         try{
-            var req = await fetch('http://localhost:3000/api/v0/alumno/editarAlumno/' + encodeURIComponent(luActual), {
+            var req = await fetch('http://localhost:3000/api/v0/alumnos/' + encodeURIComponent(luActual), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -662,9 +663,9 @@ const HTML_CREAR = `
     window.onload = async function() {
         try {
 
-            var req = await fetch('http://localhost:3000/api/v0/alumno/crearAlumno' ,{
-            method: 'GET'
-            });
+            //var req = await fetch('http://localhost:3000/api/v0/alumno',{
+            //method: 'GET'
+            //});
             inicializarDatos();
 
         } catch (error) {
@@ -680,10 +681,10 @@ const HTML_CREAR = `
             nombres: form.nombres.value,
             titulo: form.titulo.value,
             titulo_en_tramite: form.titulo_en_tramite.value || null,
-            egreso: form.egreso.value
+            egreso: form.egreso.value || null
         };
         try{
-            var req = await fetch('http://localhost:3000/api/v0/alumno/crearAlumno' , {
+            var req = await fetch('http://localhost:3000/api/v0/alumnos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

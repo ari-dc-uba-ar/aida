@@ -51,7 +51,7 @@ window.addEventListener('load', async function() {
     cel(row, 'Título');
     cel(row, 'Título en trámite');
     cel(row, 'Egreso');
-    var req = await fetch('http://localhost:3000/api/v0/alumno/');
+    var req = await fetch('http://localhost:3000/api/v0/alumnos/');
     var data = await req.json();
     console.log(data);
     data.forEach((alumno:Record<string, string>) => {
@@ -83,7 +83,7 @@ window.addEventListener('load', async function() {
             const alumnoLU: any = alumno.lu;
             console.log(`Borrando al Alumno: ${alumnoLU}`);
             try{
-                var req = await fetch('http://localhost:3000/api/v0/alumno/' + encodeURIComponent(alumnoLU), {
+                var req = await fetch('http://localhost:3000/api/v0/alumnos/' + encodeURIComponent(alumnoLU), {
                     method: 'DELETE'
                 });
                 console.log(req.status);
