@@ -1,8 +1,13 @@
-/*
-import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
-import { operacionesAida, obtenerTodosLosAlumnos } from './aida.js';
+
+//import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
+//import { operacionesAida, obtenerTodosLosAlumnos } from './aida.js';
 import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
 import * as fs from 'fs';
+import session from 'express-session';
+import express from 'express';
+//import { Request, Response, NextFunction } from 'express';
+import { Client } from "pg";
+
 // ... otros imports
 
 
@@ -19,6 +24,11 @@ const app = express()
 
 // ...
 
+async function getDbClient() {
+    const client = new Client();
+    await client.connect();
+    return client;
+}
 
 
 app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
@@ -40,7 +50,7 @@ app.use(session({
 // ============= MIDDLEWARES =============
 
 // Middleware para verificar autenticación en páginas HTML
-function requireAuth(req: Request, res: Response, next: NextFunction) {
+/*function requireAuth(req: Request, res: Response, next: NextFunction) {
     if (req.session.usuario) {
         next();
     } else {
@@ -57,7 +67,7 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-
+*/
 // ============= ENDPOINTS DE AUTENTICACIÓN =============
 
 // Página de login
@@ -144,4 +154,9 @@ app.post('/api/v0/auth/register', express.json(), async (req, res) => {
     }
 });
 
-*/
+
+const port = 4000;
+
+app.listen(port, () => {
+    console.log(`Servidor OAuth escuchando en http://localhost:${port}`);
+});

@@ -54,12 +54,11 @@ const queryImportarPorTabla: QueryImportarPorTabla[] = [
       },
 ];
 
-export function crearApiCrud(app:Express.Application, rutaApi:string){
-    var ruta = `${rutaApi}/alumnos`;
+export function crearApiCrud(app:Express.Application, rutaApi:string, requireAuthAPI: any){
+    var ruta = `${rutaApi}/:tabla`;
 
-    app.get(ruta, async (req, res) => {
-        const partes = req.url.split('/');
-        const tabla = partes[3];
+    app.get(ruta, requireAuthAPI, async (req, res) => {
+        const tabla = req.params.tabla;
         const query = queryImportarPorTabla.find(q => q.tabla === tabla)?.queryImportar;
         console.log('Listando alumnos');
         const clientDb = new Client();
@@ -77,7 +76,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string){
         }
     });
 
-    app.get(`${ruta}/:id`, async (req, res) => {
+    app.get(`${ruta}/:id`, requireAuthAPI, async (req, res) => {
         const partes = req.url.split('/');
         const tabla = partes[3];
         const key = clavesPorTabla.find(k => k.tabla === tabla)?.key;
@@ -96,7 +95,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string){
     });
 
 
-    app.post(`${ruta}`, async (req, res) => {
+    app.post(`${ruta}`, requireAuthAPI, async (req, res) => {
         const partes = req.url.split('/');
         const tabla = partes[3];
         const query = queryInsertPorTabla.find(q => q.tabla === tabla)?.queryInsert;
@@ -121,7 +120,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string){
         }
     });
 
-    app.put(`${ruta}/:id`, async (req, res) => {
+    app.put(`${ruta}/:id`, requireAuthAPI, async (req, res) => {
         const partes = req.url.split('/');
         const tabla = partes[3];
         const query = queryUpdatePorTabla.find(q => q.tabla === tabla)?.queryUpdate;
@@ -146,7 +145,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string){
         }
     });
 
-    app.delete(`${ruta}/:id`, async (req, res) => {
+    app.delete(`${ruta}/:id`, requireAuthAPI, async (req, res) => {
         const partes = req.url.split('/');
         const tabla = partes[3];
         const key = clavesPorTabla.find(k => k.tabla === tabla)?.key;

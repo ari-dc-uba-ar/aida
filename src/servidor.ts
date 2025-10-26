@@ -1,6 +1,10 @@
 import express from "express";
-
-
+//import session, { SessionData } from 'express-session';
+import session from 'express-session';
+import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
+import { Request, Response, NextFunction } from "express";
+import * as fs from 'fs';
+import { Client } from "pg";
 import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
 import { cargarNovedadesAlumnosDesdeJson, operacionesAida } from './aida.js'
 import { crearApiCrud } from "./crud-basico.js";
@@ -9,6 +13,39 @@ const app = express()
 app.use(express.json());
 const port = 3000
 
+declare module 'express-session' {
+    interface SessionData {
+        usuario?: Usuario;
+    }
+}
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.redirect('/app/login');
+    }
+}
+
+
+function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.status(401).json({ error: 'No autenticado' });
+    }
+}
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24  // 1 días
+    }
+}));
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
 app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
 app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
@@ -27,70 +64,7 @@ app.get('/ask', (req, res) => {
 })
 
 // Servidor del frontend:
-/*
-const HTML_ARCHIVO=
-`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>CSV Upload</title>
-</head>
-<body>
-  <h2>Subir archivo CSV</h2>
-  <input type="file" id="csvFile" accept=".csv" />
-  <button onclick="handleUpload()">Procesar y Enviar</button>
-
-  <script>
-    function parseCSV(text) {
-      const lines = text.trim().split(/\\r?\\n/);
-      const headers = lines[0].split(',').map(h => h.trim());
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header] = values[i];
-        });
-        return obj;
-      });
-      return data;
-    }
-    async function handleUpload() {
-      const fileInput = document.getElementById('csvFile');
-      const file = fileInput.files[0];
-      if (!file) {
-        alert('Por favor seleccioná un archivo CSV.');
-        return;
-      }
-
-      const text = await file.text();
-      const jsonData = parseCSV(text);
-
-      try {
-        const response = await fetch('../api/v0/alumnos', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'text/json'
-          },
-          body: JSON.stringify(jsonData)
-        });
-
-        if (response.ok) {
-          alert('Datos enviados correctamente.');
-        } else {
-          alert('Error al enviar los datos.');
-        }
-      } catch (error) {
-        console.error('Error en la solicitud:', error);
-        alert('Error de red o en el servidor.');
-      }
-    }
-  </script>
-</body>
-</html>
-`;
-*/
-app.get('/app/archivo', (_, res) => {
-    //res.send(HTML_ARCHIVO)
+app.get('/app/archivo', requireAuth, (_, res) => {
     res.redirect('/app/archivo-json');
 })
 
@@ -156,10 +130,97 @@ const HTML_ARCHIVO_JSON=
 </html>
 `;
 
-app.get('/app/archivo-json', (_, res) => {
+app.get('/app/archivo-json', requireAuth, (_, res) => {
     res.send(HTML_ARCHIVO_JSON)
 })
 
+async function getDbClient() {
+    const client = new Client();
+    await client.connect();
+    return client;
+}
+
+app.get('/app/login', (req, res) => {
+    if (req.session.usuario) {
+        return res.redirect('/app/menu');
+    }
+    const loginHtml = fs.readFileSync('login.html', 'utf8');
+    res.send(loginHtml);
+});
+
+app.post('/api/v0/auth/login', express.json(), async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+    }
+
+    const clientDb = await getDbClient();
+
+    try {
+        const usuario = await autenticarUsuario(clientDb, username, password);
+
+        if (usuario) {
+            req.session.usuario = usuario;
+            return res.json({
+                success: true,
+                usuario: {
+                    username: usuario.username,
+                    nombre: usuario.nombre
+                }
+            });
+        } else {
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+    } catch (error) {
+        console.error('Error en login:', error);
+        return res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+        await clientDb.end();
+    }
+});
+
+// API de logout
+app.post('/api/v0/auth/logout', (req, res) => {
+    req.session.destroy((err: any) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al cerrar sesión' });
+        }
+        return res.json({ success: true });
+    });
+});
+
+// Endpoint para crear usuario (solo para desarrollo/setup inicial)
+app.post('/api/v0/auth/register', express.json(), async (req, res) => {
+    const { username, password, nombre, email } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+    }
+
+    const clientDb = await getDbClient();
+
+    try {
+        const usuario = await crearUsuario(clientDb, username, password, nombre, email);
+
+        if (usuario) {
+            return res.status(201).json({
+                success: true,
+                usuario: {
+                    username: usuario.username,
+                    nombre: usuario.nombre
+                }
+            });
+        } else {
+            return res.status(400).json({ error: 'No se pudo crear el usuario' });
+        }
+    } catch (error) {
+        console.error('Error al crear usuario:', error);
+        return res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+        await clientDb.end();
+    }
+});
 
 // API DEL BACKEND
 function apiBackend(operaciones: DefinicionesDeOperaciones) {
@@ -195,11 +256,11 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         </html>
         `;
 
-        app.get('/app/'+operacion.operacion, (_, res) => {
+        app.get('/app/'+operacion.operacion, requireAuth, (_, res) => {
             res.send(HTML_PANTALLA);
         });
 
-        app.get('/api/v0/'+operacion.operacion+'/:arg1', async (req, res) => {
+        app.get('/api/v0/'+operacion.operacion+'/:arg1', requireAuthAPI, async (req, res) => {
             console.log(req.params, req.query, req.body);
             const argumentos = [req.params.arg1 as string];
             const htmlVacio =
@@ -231,18 +292,18 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         })
     }
 
-    app.get('/app/menu', (_, res) => {
+    app.get('/app/menu', requireAuth, (_, res) => {
         res.send(menu)
     })
-    //REVISAR CODIGO ANTES DE SUBIR A GIT
-    app.patch('/api/v0/alumnos', async (req, res) => {
+    //Ver si put o patch
+    app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
         const alumnosJson = req.body;
         await cargarNovedadesAlumnosDesdeJson(alumnosJson);
         res.status(200).send('<h1>Carga de datos JSON exitosa!</h1>');
     });
 
     app.listen(port, () => {
-        console.log(`Example app listening on port http://localhost:${port}/app/menu`)
+        console.log(`Example app listening on port http://localhost:${port}/app/login`)
     })
 
 
@@ -250,12 +311,12 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
 
 apiBackend(operacionesAida);
 
-app.get('/app/style.css', (_, res) => {
+app.get('/app/style.css', requireAuth, (_, res) => {
     res.sendFile(`${process.cwd()}/style.css`);
 });
 
-crearApiCrud(app, '/api/v0')
-app.get('/app/alumno', (_, res) => {
+crearApiCrud(app, '/api/v0', requireAuthAPI)
+app.get('/app/alumno', requireAuth, (_, res) => {
     res.send(`<!DOCTYPE html>
         <html lang="es">
         <head>
@@ -272,7 +333,7 @@ app.get('/app/alumno', (_, res) => {
 });
 
 
-app.get('/app/alumno.js', (_, res) => {
+app.get('/app/alumno.js', requireAuth, (_, res) => {
     res.sendFile(`${process.cwd()}/alumno.js`);
 });
 
@@ -708,13 +769,13 @@ const HTML_CREAR = `
 
 
 
-app.get('/app/alumno/editarAlumno/:lu', (req, res) => {
+app.get('/app/alumno/editarAlumno/:lu', requireAuth, (req, res) => {
     const luAlumno = req.params.lu;
     console.log(`Solicitud de edición para el alumno con LU: ${luAlumno}`);
     res.send(HTML_EDITAR);
 });
 
-app.get('/app/alumno/crearAlumno', (_, res) => {
+app.get('/app/alumno/crearAlumno', requireAuth, (_, res) => {
     console.log(`Solicitud de Creacion de un Alumno`);
     res.send(HTML_CREAR);
 });
