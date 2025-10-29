@@ -36,7 +36,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO aida_user;
 ```
 
 ## 3.  Adaptar código para elegir que DB usar
-- Dentro del apartado **Connect** en la parte superior de la pantalla obtener el *Connection String*. 
+- Dentro del apartado **Connect** en la parte superior de la pantalla obtener el *Connection String* y utilizar el valor de *Transaction pooler*. 
 - Cambiar el código de nuestra aplicacion  para conectarse a el nuevo cliente
 
     const clientDb = new Client({
