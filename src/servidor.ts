@@ -19,23 +19,6 @@ declare module 'express-session' {
     }
 }
 
-function requireAuth(req: Request, res: Response, next: NextFunction) {
-    if (req.session.usuario) {
-        next();
-    } else {
-        res.redirect('/app/login');
-    }
-}
-
-
-function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
-    if (req.session.usuario) {
-        next();
-    } else {
-        res.status(401).json({ error: 'No autenticado' });
-    }
-}
-
 app.use(session({
     secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion',
     resave: false,
@@ -140,6 +123,8 @@ async function getDbClient() {
     return client;
 }
 
+//API de login
+
 app.get('/app/login', (req, res) => {
     if (req.session.usuario) {
         return res.redirect('/app/menu');
@@ -179,6 +164,25 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
         await clientDb.end();
     }
 });
+
+//Funciones middleware de Auth
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.redirect('/app/login');
+    }
+}
+
+
+function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.status(401).json({ error: 'No autenticado' });
+    }
+}
+
 
 // API de logout
 app.post('/api/v0/auth/logout', (req, res) => {
@@ -225,7 +229,7 @@ app.post('/api/v0/auth/register', express.json(), async (req, res) => {
 // API DEL BACKEND
 function apiBackend(operaciones: DefinicionesDeOperaciones) {
 
-    //var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
+   //Pagina del menu
 
     var menu = `<!doctype html>
       <html>
@@ -330,7 +334,11 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
 
 }
 
+//Llamada a programas
+
 apiBackend(operacionesAida);
+crearApiCrud(app, '/api/v0', requireAuthAPI)
+
 //Estilos
 app.get('/app/styleMenu.css', (_, res) => {
     res.sendFile(`${process.cwd()}/styleMenu.css`);
@@ -340,11 +348,8 @@ app.get('/app/style.css', requireAuth, (_, res) => {
     res.sendFile(`${process.cwd()}/style.css`);
 });
 
-//CRUD BASICO
 
-crearApiCrud(app, '/api/v0', requireAuthAPI)
-
-//PAGINA ALUMNOS
+//Tabla Alumnos
 app.get('/app/alumno', requireAuth, (_, res) => {
     res.send(`<!DOCTYPE html>
         <html lang="es">
@@ -361,7 +366,7 @@ app.get('/app/alumno', requireAuth, (_, res) => {
     )
 });
 
-//TABLA ALUMNOS
+//Funciones Tabla Alumnos
 
 app.get('/app/alumno.js', requireAuth, (_, res) => {
     res.sendFile(`${process.cwd()}/alumno.js`);

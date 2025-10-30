@@ -23,7 +23,6 @@ export async function orquestador(definicionOperaciones:DefinicionesDeOperacione
         const infoParametro = definicionOperaciones.find(p => p.operacion == operacion);
         resultado = await infoParametro!.accion(
             clientDb,
-            // @ts-ignore `...argumentos` se está pasando acá con ligereza
             ...argumentos
         );
     }
