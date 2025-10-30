@@ -1,0 +1,13 @@
+.boton-logout {
+  display: inline-block;
+  background: #e74c3c;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .15s ease;
+}
+.boton-logout:hover {
+  background: #c0392b;
+}

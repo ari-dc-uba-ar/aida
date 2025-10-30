@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear nuevo Alumno</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .form-group label {
+            flex-basis: 150px;
+            font-weight: bold;
+            color: #555;
+            margin-right: 20px;
+        }
+        .data-input {
+            flex-grow: 1;
+        }
+        .data-input input[type="text"],
+        .data-input input[type="number"],
+        .data-input input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Crear nuevo Alumno</h1>
+
+    <form id="form-creacion">
+
+        <div class="form-group">
+            <label for="lu">LU</label>
+            <div class="data-input">
+                <input type="text" id="nuevaLU" name="lu" value="" placeholder="LU">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="apellido">Apellido</label>
+            <div class="data-input">
+                <input type="text" id="nuevoApellido" name="apellido" value="" placeholder="Apellido">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="nombres">Nombres</label>
+            <div class="data-input">
+                <input type="text" id="nuevoNombre" name="nombres" value="" placeholder="Nombres">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="titulo">Título</label>
+            <div class="data-input">
+                <input type="text" id="nuevoTitulo" name="titulo" value="" placeholder="Título">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="titulo_en_tramite">Título en Trámite</label>
+            <div class="data-input">
+                <input type="date" id="nuevoEstadoTramiteTitulo" name="titulo_en_tramite" value="">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="egreso">Fecha de Egreso</label>
+            <div class="data-input">
+                <input type="date" id="nuevaFechaDeEgreso" name="egreso" value="">
+            </div>
+        </div>
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</div>
+<script>
+
+    function inicializarDatos() {
+
+        document.getElementById('nuevaLU').value = "";
+
+        document.getElementById('nuevoApellido').value = "";
+
+        document.getElementById('nuevoNombre').value = "";
+
+        document.getElementById('nuevoTitulo').value = "";
+
+        document.getElementById('nuevoEstadoTramiteTitulo').value = 'dd/mm/yy';
+
+        document.getElementById('nuevaFechaDeEgreso').value = 'dd/mm/yy';
+
+    }
+
+
+    window.onload = async function() {
+        try {
+
+            inicializarDatos();
+
+        } catch (error) {
+            console.error('Error al inicializar datos: ', error);
+        }
+    }
+    document.getElementById('form-creacion').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const datosCreados = {
+            lu: form.lu.value,
+            apellido: form.apellido.value,
+            nombres: form.nombres.value,
+            titulo: form.titulo.value,
+            titulo_en_tramite: form.titulo_en_tramite.value || null,
+            egreso: form.egreso.value || null
+        };
+        try{
+            var req = await fetch('http://localhost:3000/api/v0/alumnos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosCreados)
+            });
+            if (req.ok) {
+                alert('Datos Creados correctamente.');
+                window.location.href = '/app/alumno';
+            }
+        }
+        catch(error){
+            console.error('Error al añadir los datos del alumno: ', error);
+            alert('Error al crear los datos.');
+        }
+    });
+</script>
+</body>
+</html>
