@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-import { deCualquierTexto, deTexto, aTexto, aISO, deISO, esFecha, mismaFecha, Fecha } from '../src/fechas.js'
+import { deCualquierTexto, deTexto, aTexto, aISO, deISO, esFecha, mismaFecha } from '../src/fechas.js'
 
 var textoISO = '2025-09-13'
 var textoFecha = '13/09/2025'
