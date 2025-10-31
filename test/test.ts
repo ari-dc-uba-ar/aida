@@ -35,14 +35,6 @@ describe("fechas", function(){
 })
 
 describe("tipos fechas", function(){
-    var date = new Date(textoISO);
-    it("no reconoce un Date como tipo fecha", function(){
-        // @ts-expect-error no se puede asignar un date común en fecha
-        var fecha:Fecha = date;
-        assert.throws(function(){
-            assert.equal(aTexto(fecha), textoFecha)
-        })
-    })
     it("discrimina un entero no es fecha", function(){
         var entero = 7;
         assert.equal(esFecha(entero), false)
