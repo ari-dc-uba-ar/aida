@@ -110,7 +110,7 @@
         return `
         <div class="form-group">
             <label for="${campo.id}">${campo.Titulo}</label>
-            <div class="data-current" id="${campo.valor}">---</div>
+            <div class="data-current" id="${campo.nombreActual}">---</div>
             <div class="data-input">
                 <input type="${campo.tipo}" id="${campo.nuevoNombre}" name="${campo.Nombre}" value=""
                 ${campo.placeholder ? `placeholder="${campo.placeholder}"` : ''}
@@ -122,13 +122,12 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const partes = window.location.pathname.split('/');
-        const tabla = partes[partes.length - 2];
-        console.log(tabla);
+        const tabla = partes[partes.length - 3];
         if (window.TituloEditarPorTabla) {
             const tituloConfig = window.TituloEditarPorTabla.find(t => t.tabla === tabla);
             if (tituloConfig) {
-                document.title = tituloConfig.Titulo;
-                document.querySelector('h1').textContent = tituloConfig.Titulo;
+                document.title = tituloConfig.TituloEditar;
+                document.querySelector('h1').textContent = tituloConfig.TituloEditar;
             }
         }
         const form = document.getElementById('form-edicion');
@@ -147,21 +146,20 @@
 <script>
 
     function cargarDatos(alumno) {
-
         const partes = window.location.pathname.split('/');
-        const tabla = partes[partes.length - 2];
+        const tabla = partes[partes.length - 3];
         const datosIniciales = window.CargarDatos.find(d => d.tabla === tabla);
         if(datosIniciales){
-            for(const [id, nombre, nuevoNombre, fecha] of Object.entries(datosIniciales.campos)){
+            for([clave, {id, nombreActual, nuevoNombre, fecha }] of Object.entries(datosIniciales.campos)){
                 if(fecha){
                     const valorInicial = alumno[id] ? alumno[id].slice(0,10) : 'dd/mm/yy';
-                    document.getElementById(nombre).textContent = valorInicial;
+                    document.getElementById(nombreActual).textContent = valorInicial;
                     document.getElementById(nuevoNombre).value = valorInicial;
                 }
                 else{
                     const valorInicial = alumno[id];
-                    document.getElementById(nombre).textContent = alumno[id];
-                    document.getElementById(nuevoNombre).value = alumno[id];
+                    document.getElementById(nombreActual).textContent = valorInicial;
+                    document.getElementById(nuevoNombre).value = valorInicial;
                 }
             }
         }
@@ -169,14 +167,14 @@
 
     function ObtenerLU() {
         const reemplazarBarra = window.location.pathname.replace(/\/$/, '');
-        const partes = pathname.split('/');
+        const partes = reemplazarBarra.split('/');
         const luCodificado = partes[partes.length - 1];
         return decodeURIComponent(luCodificado);
     }
 
 window.onload = async function() {
     const partes = window.location.pathname.split('/');
-    const tabla = partes[partes.length - 2];
+    const tabla = partes[partes.length - 3];
     let idActual = '';
     if(tabla == 'alumno'){
         idActual = ObtenerLU();
@@ -199,10 +197,12 @@ window.onload = async function() {
     document.getElementById('form-edicion').addEventListener('submit', async function(event) {
         event.preventDefault();
         const form = event.target;
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 3];
         const campos = window.CamposPorTabla.find(c => c.tabla === tabla).campos;
         const datosEditados = window.DatosEditadosPorTabla.find(d => d.tabla === tabla).datosEditados;
         for(const campo of campos){
-            datosEditados[campo.id] = form[campo.id].value || null;
+            datosEditados[campo.id] = form[campo.nuevoNombre].value || null;
         }
         try{
             var req = await fetch('http://localhost:3000/api/v0/' + (tabla === 'alumno' ? 'alumnos' : tabla) + '/' + encodeURIComponent(idActual), {

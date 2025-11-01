@@ -80,6 +80,7 @@ interface TituloEditarPorTabla{
 interface CamposParaEditar{
     id: string;
     nombre: string;
+    nombreActual: string;
     Titulo: string;
     tipo: string;
     nuevoNombre: string;
@@ -110,16 +111,16 @@ interface DatosEditadosPorTabla{
 }
 
 const TituloEditarPorTabla: TituloEditarPorTabla[] = [
-    { tabla: 'alumno', TituloEditar: 'editarAlumno' },
+    { tabla: 'alumno', TituloEditar: 'Editar datos de Alumno'},
 ];
 
 const CamposParaEditarAlumno: CamposParaEditar[] = [
-    { id: 'lu', nombre: 'lu', Titulo: 'LU', tipo: 'text', nuevoNombre: 'nuevaLU', placeholder: '', disabled: true },
-    { id: 'apellido', nombre: 'apellido', Titulo: 'Apellido', tipo: 'text', nuevoNombre: 'nuevoApellido', placeholder: 'Apellido del Alumno', disabled: false },
-    { id: 'nombres', nombre: 'nombres', Titulo: 'Nombres', tipo: 'text', nuevoNombre: 'nuevoNombre', placeholder: 'Nombres del Alumno', disabled: false },
-    { id: 'titulo', nombre: 'titulo', Titulo: 'Título', tipo: 'text', nuevoNombre: 'nuevoTitulo', placeholder: 'Título del Alumno', disabled: false },
-    { id: 'titulo_en_tramite', nombre: 'titulo_en_tramite', Titulo: 'Título en Trámite', tipo: 'date', nuevoNombre: 'nuevoEstadoTramiteTitulo', placeholder: 'YYYY-MM-DD', disabled: false },
-    { id: 'egreso', nombre: 'egreso', Titulo: 'Fecha de Egreso', tipo: 'date', nuevoNombre: 'nuevaFechaDeEgreso', placeholder: 'YYYY-MM-DD', disabled: false }
+    { id: 'lu', nombre: 'lu', nombreActual: 'lu_actual', Titulo: 'LU', tipo: 'text', nuevoNombre: 'nuevaLU', placeholder: '', disabled: true },
+    { id: 'apellido', nombre: 'apellido', nombreActual: 'apellido_actual', Titulo: 'Apellido', tipo: 'text', nuevoNombre: 'nuevoApellido', placeholder: 'Apellido del Alumno', disabled: false },
+    { id: 'nombres', nombre: 'nombres', nombreActual: 'nombres_actual', Titulo: 'Nombres', tipo: 'text', nuevoNombre: 'nuevoNombre', placeholder: 'Nombres del Alumno', disabled: false },
+    { id: 'titulo', nombre: 'titulo', nombreActual: 'titulo_actual', Titulo: 'Título', tipo: 'text', nuevoNombre: 'nuevoTitulo', placeholder: 'Título del Alumno', disabled: false },
+    { id: 'titulo_en_tramite', nombre: 'titulo_en_tramite', nombreActual: 'titulo_en_tramite_actual', Titulo: 'Título en Trámite', tipo: 'date', nuevoNombre: 'nuevoEstadoTramiteTitulo', placeholder: 'YYYY-MM-DD', disabled: false },
+    { id: 'egreso', nombre: 'egreso', nombreActual: 'egreso_actual', Titulo: 'Fecha de Egreso', tipo: 'date', nuevoNombre: 'nuevaFechaDeEgreso', placeholder: 'YYYY-MM-DD', disabled: false }
 ];
 
 const CamposParaEditarPorTabla: CamposParaEditarPorTabla[] = [

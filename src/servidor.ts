@@ -375,7 +375,7 @@ app.get('/app/alumno.js', requireAuth, (_, res) => {
 app.get('/app/alumno/editarAlumno/:lu', requireAuth, (req, res) => {
     const luAlumno = req.params.lu;
     console.log(`Solicitud de edición para el alumno con LU: ${luAlumno}`);
-    res.sendFile(`${process.cwd()}/editarAlumno.html`);
+    res.sendFile(`${process.cwd()}/editarGenerico.html`);
 });
 
 app.get('/app/alumno/crearAlumno', requireAuth, (_, res) => {
