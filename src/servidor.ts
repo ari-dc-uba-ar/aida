@@ -380,5 +380,10 @@ app.get('/app/alumno/editarAlumno/:lu', requireAuth, (req, res) => {
 
 app.get('/app/alumno/crearAlumno', requireAuth, (_, res) => {
     console.log(`Solicitud de Creacion de un Alumno`);
-    res.sendFile(`${process.cwd()}/crearAlumno.html`);
+    res.sendFile(`${process.cwd()}/crearGenerico.html`);
+});
+
+//Diccionarios
+app.get('/app/diccionarios.js', (_, res) => {
+    res.sendFile(`${process.cwd()}/diccionarios.js`);
 });
