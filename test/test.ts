@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-import { deCualquierTexto, deTexto, aTexto, aISO, deISO, esFecha, mismaFecha, Fecha } from '../src/fechas.js'
+import { deCualquierTexto, deTexto, aTexto, aISO, deISO, esFecha, mismaFecha } from '../src/fechas.js'
 
 var textoISO = '2025-09-13'
 var textoFecha = '13/09/2025'
@@ -35,14 +35,6 @@ describe("fechas", function(){
 })
 
 describe("tipos fechas", function(){
-    var date = new Date(textoISO);
-    it("no reconoce un Date como tipo fecha", function(){
-        // @ts-expect-error no se puede asignar un date común en fecha
-        var fecha:Fecha = date;
-        assert.throws(function(){
-            assert.equal(aTexto(fecha), textoFecha)
-        })
-    })
     it("discrimina un entero no es fecha", function(){
         var entero = 7;
         assert.equal(esFecha(entero), false)

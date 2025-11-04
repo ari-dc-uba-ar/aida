@@ -6,7 +6,7 @@
         "outDir": "../dist-test",
         "moduleResolution": "node",
         "target": "esnext",
-
+        "module": "ESNext",
         "lib":["es2022"],
         "inlineSourceMap": true,
         "inlineSources": true,
