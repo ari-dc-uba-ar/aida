@@ -1,4 +1,4 @@
-//import { Client } from "pg";
+import { DiccionariosTablas } from "diccionariosGetTablas";
 
 function dom(tag:string, attrs?:Record<string, string>, children?:(HTMLElement|Text)[]) {
     const el = document.createElement(tag);
@@ -22,51 +22,50 @@ function cel(row:HTMLTableRowElement, textContent:string|undefined) {
 }
 
 window.addEventListener('load', async function() {
+    const tabla = window.location.pathname.split('/')[2];
+    console.log(tabla);
+    const datosTabla = DiccionariosTablas.find(t => t.tabla === tabla);
     document.body.innerHTML = ``;
-    var table = dom('table', {id:'table-alumnos'}, []) as HTMLTableElement;
+    var table = dom('table', {id:'${datosTabla.id}'}, []) as HTMLTableElement;
     var main = dom('div', {className:'main'}, [
-        dom('h1', {}, [text('Alumnos')]),
+        dom('h1', {}, [text('${datosTabla.text}')]),
         table
     ]);
     document.body.appendChild(main);
 
 
-    var botonCrear = dom('button', { class: 'boton-crear', type: 'button' }, [text('Crear Alumno')]) as HTMLButtonElement;
+    var botonCrear = dom('button', { class: 'boton-crear', type: 'button' }, [text('${datosTabla.crear}')]) as HTMLButtonElement;
     botonCrear.onclick = () => {
-        const urlCreacion = `/app/alumno/crearAlumno`;
-        console.log(`Abriendo ventana para crear un Alumno`);
-        window.location.href = urlCreacion;
+        if(datosTabla != undefined){
+            const urlCreacion = datosTabla.urlCreacion;
+            console.log(`Abriendo ventana para crear un/una ${tabla}`);
+            window.location.href = urlCreacion;
+        }
     };
 
     main.appendChild(document.createElement('br'));
     main.appendChild(botonCrear);
     var row = table.insertRow();
-    cel(row, 'LU');
-    cel(row, 'Apellido');
-    cel(row, 'Nombres');
-    cel(row, 'Título');
-    cel(row, 'Título en trámite');
-    cel(row, 'Egreso');
-    var req = await fetch('http://localhost:3000/api/v0/alumnos/');
+    for (const campo of datosTabla!.campos){
+        cel(row, campo);
+    }
+    var req = await fetch('http://localhost:3000/api/v0/' + (datosTabla!.tabla === 'alumno' ? 'alumnos' : datosTabla!.tabla) + '/');
     var data = await req.json();
     console.log(data);
-    data.forEach((alumno:Record<string, string>) => {
+    data.forEach((registro:Record<string, string>) => {
         var row = table.insertRow();
-        cel(row, alumno.lu);
-        cel(row, alumno.apellido);
-        cel(row, alumno.nombres);
-        cel(row, alumno.titulo);
-        cel(row, alumno.titulo_en_tramite);
-        cel(row, alumno.egreso);
+        for (const elemento of Object.entries(registro)){
+            cel(row, elemento[1]);
+        }
 
         var celdaEditar = row.insertCell();
         var botonEditar = dom('button', { class: 'boton-editar' }, [text('Editar')]) as HTMLButtonElement;
 
         botonEditar.onclick = () => {
-            const alumnoLU: any = alumno.lu;
-            const luCodificado = encodeURIComponent(alumnoLU);
-            const urlEdicion = `/app/alumno/editarAlumno/${luCodificado}`;
-            console.log(`Abriendo ventana para editar al alumno ID: ${alumnoLU}`);
+            const id: any = registro[datosTabla!.pk];
+            const idCodificado = encodeURIComponent(id);
+            const urlEdicion = `${datosTabla!.urlEdicion} + ${idCodificado}`;
+            console.log(`Abriendo ventana para editar al ID: ${id}`);
             window.location.href = urlEdicion;
         };
 
@@ -76,10 +75,10 @@ window.addEventListener('load', async function() {
         var botonBorrar = dom('button', { class: 'boton-borrar', type: 'button' }, [text('Borrar')]) as HTMLButtonElement;
 
         botonBorrar.onclick = async () => {
-            const alumnoLU: any = alumno.lu;
-            console.log(`Borrando al Alumno: ${alumnoLU}`);
+            const id: any = registro[datosTabla!.pk];
+            console.log(`Borrando al ${datosTabla!.tabla}: ${id}`);
             try{
-                var req = await fetch('http://localhost:3000/api/v0/alumnos/' + encodeURIComponent(alumnoLU), {
+                var req = await fetch('http://localhost:3000/api/v0/' + (datosTabla!.tabla === 'alumno' ? 'alumnos' : datosTabla!.tabla) + '/' + encodeURIComponent(id), {
                     method: 'DELETE'
                 });
                 console.log(req.status);

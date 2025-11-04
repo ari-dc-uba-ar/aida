@@ -368,6 +368,10 @@ app.get('/app/alumno', requireAuth, (_, res) => {
 
 //Funciones Tabla Alumnos
 
+//app.get('/app/:nombreTabla.js', requireAuth, (_, res) => {
+//    res.sendFile(`${process.cwd()}/tablaGenerico.js`);
+//});
+
 app.get('/app/alumno.js', requireAuth, (_, res) => {
     res.sendFile(`${process.cwd()}/alumno.js`);
 });
