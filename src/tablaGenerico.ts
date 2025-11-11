@@ -1,4 +1,4 @@
-import { DiccionariosTablas } from "diccionariosGetTablas";
+import { DiccionariosTablas } from "./diccionariosGetTablas";
 
 function dom(tag:string, attrs?:Record<string, string>, children?:(HTMLElement|Text)[]) {
     const el = document.createElement(tag);
@@ -26,15 +26,15 @@ window.addEventListener('load', async function() {
     console.log(tabla);
     const datosTabla = DiccionariosTablas.find(t => t.tabla === tabla);
     document.body.innerHTML = ``;
-    var table = dom('table', {id:'${datosTabla.id}'}, []) as HTMLTableElement;
+    var table = dom('table', {id:'tabla'}, []) as HTMLTableElement;
     var main = dom('div', {className:'main'}, [
-        dom('h1', {}, [text('${datosTabla.text}')]),
+        dom('h1', {}, [text(datosTabla!.text)]),
         table
     ]);
     document.body.appendChild(main);
 
 
-    var botonCrear = dom('button', { class: 'boton-crear', type: 'button' }, [text('${datosTabla.crear}')]) as HTMLButtonElement;
+    var botonCrear = dom('button', { class: 'boton-crear', type: 'button' }, [text(datosTabla!.crear)]) as HTMLButtonElement;
     botonCrear.onclick = () => {
         if(datosTabla != undefined){
             const urlCreacion = datosTabla.urlCreacion;
@@ -43,8 +43,14 @@ window.addEventListener('load', async function() {
         }
     };
 
+    var botonMenu = dom('button', { class: 'boton-menu', type: 'button' }, [text('<- Menu')]) as HTMLButtonElement;
+    botonMenu.onclick = () => {
+        window.location.href = 'menu'
+    }
+
     main.appendChild(document.createElement('br'));
     main.appendChild(botonCrear);
+    main.appendChild(botonMenu)
     var row = table.insertRow();
     for (const campo of datosTabla!.campos){
         cel(row, campo);
@@ -62,9 +68,18 @@ window.addEventListener('load', async function() {
         var botonEditar = dom('button', { class: 'boton-editar' }, [text('Editar')]) as HTMLButtonElement;
 
         botonEditar.onclick = () => {
-            const id: any = registro[datosTabla!.pk];
+            const pk = datosTabla!.pk;
+            let id = '';
+            let i = 0;
+            pk.forEach(key => {
+                id += registro[key];
+                if(i < pk.length - 1){
+                    id += '_';
+                }
+                i++;
+            });
             const idCodificado = encodeURIComponent(id);
-            const urlEdicion = `${datosTabla!.urlEdicion} + ${idCodificado}`;
+            const urlEdicion = datosTabla!.urlEdicion + idCodificado;
             console.log(`Abriendo ventana para editar al ID: ${id}`);
             window.location.href = urlEdicion;
         };
@@ -75,7 +90,17 @@ window.addEventListener('load', async function() {
         var botonBorrar = dom('button', { class: 'boton-borrar', type: 'button' }, [text('Borrar')]) as HTMLButtonElement;
 
         botonBorrar.onclick = async () => {
-            const id: any = registro[datosTabla!.pk];
+            const pk = datosTabla!.pk;
+            let id = '';
+            let i = 0;
+            pk.forEach(key => {
+                id += registro[key];
+                if(i < pk.length - 1){
+                    id += '_';
+                }
+                i++;
+            });
+
             console.log(`Borrando al ${datosTabla!.tabla}: ${id}`);
             try{
                 var req = await fetch('http://localhost:3000/api/v0/' + (datosTabla!.tabla === 'alumno' ? 'alumnos' : datosTabla!.tabla) + '/' + encodeURIComponent(id), {

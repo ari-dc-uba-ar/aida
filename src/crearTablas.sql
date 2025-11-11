@@ -28,7 +28,7 @@ CREATE TABLE aida.Cursada (
     nota INT NOT NULL,
     profesor VARCHAR(100) NOT NULL,
 
-    PRIMARY KEY (lu, id_Materia),
+    PRIMARY KEY (lu, id_Materia, cuatrimestre),
     FOREIGN KEY (lu) REFERENCES aida.alumnos(lu),
     FOREIGN KEY (id_Materia) REFERENCES aida.Materia(id_Materia)
 );

@@ -8,6 +8,8 @@ import { Client } from "pg";
 import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
 import { cargarNovedadesAlumnosDesdeJson, operacionesAida } from './aida.js'
 import { crearApiCrud } from "./crud-basico.js";
+import { DiccionariosTablas } from "./diccionariosGetTablas.js";
+import { chequearCantidadAprobadas } from "./aprobadas.js";
 
 const app = express()
 app.use(express.json());
@@ -241,6 +243,11 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         <h1>AIDA API</h1>
         <ul>`;
     menu += `<li><a href="/app/alumno">Alumnos</a></li>`;
+    menu += `<li><a href="/app/materia">Materias</a></li>`;
+    menu += `<li><a href="/app/carrera">Carreras</a></li>`;
+    menu += `<li><a href="/app/materiasporcarrera">Materias por Carrera</a></li>`;
+    menu += `<li><a href="/app/alumnosporcarrera">Alumnos por Carrera</a></li>`;
+    menu += `<li><a href="/app/cursada">Cursadas</a></li>`;
     for (const operacion of operaciones) {
         if (operacion.visible) {
             menu += `<li><a href="./${operacion.operacion}">${operacion.descripcion}</a></li>`;
@@ -320,7 +327,7 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
     app.get('/app/menu', requireAuth, (_, res) => {
         res.send(menu)
     })
-    //PREGUNTAR SI PONGO POST ME LLAMA ESTO EN LUGAR DEL CRUD
+
     app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
         const alumnosJson = req.body;
         await cargarNovedadesAlumnosDesdeJson(alumnosJson);
@@ -349,45 +356,74 @@ app.get('/app/style.css', requireAuth, (_, res) => {
 });
 
 
-//Tabla Alumnos
-app.get('/app/alumno', requireAuth, (_, res) => {
-    res.send(`<!DOCTYPE html>
+// Diccionarios
+app.get('/app/diccionariosGetTablas', requireAuth, (_, res) => {
+        res.sendFile(`${process.cwd()}/diccionariosGetTablas.js`);
+    });
+
+app.get('/app/diccionarios.js', (_, res) => {
+    res.sendFile(`${process.cwd()}/diccionarios.js`);
+});
+
+// Tablas Aprobadas
+
+app.get('/app/aprobadas/:lu', requireAuth, async (req, res) => {
+    try{
+        const resultado:string = await chequearCantidadAprobadas(req.params.lu!);
+        if (resultado) {
+            res.set('Content-Type', 'text/html');
+            res.status(200).send(resultado);
+        }
+        else{
+            res.status(403).send('El alumno no aprobo todas las materias todavia');
+        }
+    } catch (error) {
+        console.error('Error al generar el certificado:', error);
+        res.status(500).send('Error al generar el certificado');
+    }
+});
+
+function getEndPoints(tabla: string) {
+    const datosTabla = DiccionariosTablas.find(t => t.tabla === tabla);
+    const titulo = datosTabla?.text;
+    app.get(`/app/${tabla}`, requireAuth, (_, res) => {
+        res.send(`<!DOCTYPE html>
         <html lang="es">
         <head>
             <meta charset="UTF-8">
-            <title>Alumnos</title>
+            <title>${titulo}</title>
             <link rel="stylesheet" href="/app/style.css">
         </head>
         <body>
             <h2>loading...</h2>
-            <script src="/app/alumno.js"></script>
+            <script src="/app/tablaGenerico.js" type="module"></script>
         </body>
         </html>`
-    )
-});
+        );
+    });
 
-//Funciones Tabla Alumnos
 
-//app.get('/app/:nombreTabla.js', requireAuth, (_, res) => {
-//    res.sendFile(`${process.cwd()}/tablaGenerico.js`);
-//});
+    app.get('/app/tablaGenerico.js', requireAuth, (_, res) => {
+        res.sendFile(`${process.cwd()}/tablaGenerico.js`);
+    });
 
-app.get('/app/alumno.js', requireAuth, (_, res) => {
-    res.sendFile(`${process.cwd()}/alumno.js`);
-});
+    const urlEdicion = datosTabla!.urlEdicion;
+    app.get(`${urlEdicion}:lu`, requireAuth, (req, res) => {
+        const luAlumno = req.params.lu;
+        console.log(`Solicitud de edición para el alumno con LU: ${luAlumno}`);
+        res.sendFile(`${process.cwd()}/editarGenerico.html`);
+    });
+    const urlCreacion = datosTabla!.urlCreacion;
+    app.get(`${urlCreacion}`, requireAuth, (_, res) => {
+        console.log(`Solicitud de Creacion de un Alumno`);
+        res.sendFile(`${process.cwd()}/crearGenerico.html`);
+    });
 
-app.get('/app/alumno/editarAlumno/:lu', requireAuth, (req, res) => {
-    const luAlumno = req.params.lu;
-    console.log(`Solicitud de edición para el alumno con LU: ${luAlumno}`);
-    res.sendFile(`${process.cwd()}/editarGenerico.html`);
-});
+}
 
-app.get('/app/alumno/crearAlumno', requireAuth, (_, res) => {
-    console.log(`Solicitud de Creacion de un Alumno`);
-    res.sendFile(`${process.cwd()}/crearGenerico.html`);
-});
-
-//Diccionarios
-app.get('/app/diccionarios.js', (_, res) => {
-    res.sendFile(`${process.cwd()}/diccionarios.js`);
-});
+getEndPoints('alumno');
+getEndPoints('materia');
+getEndPoints('carrera');
+getEndPoints('materiasporcarrera');
+getEndPoints('alumnosporcarrera');
+getEndPoints('cursada');

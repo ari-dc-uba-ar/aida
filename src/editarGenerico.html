@@ -179,6 +179,15 @@ window.onload = async function() {
     if(tabla == 'alumno'){
         idActual = ObtenerLU();
     }
+    else if (tabla == 'alumnosporcarrera' || tabla == 'cursada'){
+        id = partes[partes.length -1];
+        lu = id.split('_')[0];
+        luActual = decodeURIComponent(lu);
+        idActual = luActual;
+        for(let i = 1; (i < id.split('_').length); i++){
+            idActual += '_' + id.split('_')[i];
+        }
+    }
     else{
         idActual = partes[partes.length - 1];
     }

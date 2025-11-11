@@ -152,6 +152,26 @@
             body: JSON.stringify(datosCreados)
             });
             if (req.ok) {
+                if(tabla == 'cursada'){
+                    if(datosCreados['nota'] >= 4){
+                        const resultado = await fetch('http://localhost:3000/app/aprobadas/' + encodeURIComponent(datosCreados['lu']), {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+
+                        });
+                        if(resultado.status == 200){
+                            const certificadoHTML = await resultado.text();
+                            const nuevaVentana = window.open('', '_blank');
+                            nuevaVentana.document.write('<html><head><title>Certificado</title>');
+                            nuevaVentana.document.write('</head><body>');
+                            nuevaVentana.document.write(certificadoHTML);
+                            nuevaVentana.document.write('</body></html>');
+                            nuevaVentana.document.close();
+                        }
+                    }
+                }
                 alert('Datos Creados correctamente.');
                 window.location.href = '/app/' + tabla;
             }
