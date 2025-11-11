@@ -1,6 +1,7 @@
+import 'dotenv/config';
 import { Client } from "pg";
 import * as Express from "express";
-require('dotenv').config();
+
 
 /*interface KeyPorTabla {
     tabla: string;
@@ -199,7 +200,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
         const tabla = req.params.tabla;
         const query = queryImportarPorTabla.find(q => q.tabla === tabla)?.queryImportar;
         console.log('Listando alumnos');
-        const clientDb = new Client();
+        const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
         await clientDb.connect();
         if(query){
             try {
@@ -218,7 +219,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
         const partes = req.url.split('/');
         const tabla = partes[3];
         const query = queryGetPorTabla.find(q => q.tabla === tabla)?.queryGet;
-        const clientDb = new Client();
+        const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
         await clientDb.connect();
         try {
             const ids = req.params.id.split('_');
@@ -246,7 +247,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
                 datosCampos.push(req.body[campo]);
             }
         }
-        const clientDb = new Client();
+        const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
         await clientDb.connect();
         if(query){
             try {
@@ -271,7 +272,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
                 datosCampos.push(req.body[campo]);
             }
         }
-        const clientDb = new Client();
+        const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
         await clientDb.connect();
         if(query){
             try {
@@ -289,7 +290,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
         const partes = req.url.split('/');
         const tabla = partes[3];
         const query = queryDeletePorTabla.find(q => q.tabla === tabla)?.queryDelete;
-        const clientDb = new Client();
+        const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
         await clientDb.connect();
         try {
             const ids = req.params.id.split('_');

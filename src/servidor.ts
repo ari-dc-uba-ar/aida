@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from "express";
 //import session, { SessionData } from 'express-session';
 import session from 'express-session';
@@ -10,6 +11,7 @@ import { cargarNovedadesAlumnosDesdeJson, operacionesAida } from './aida.js'
 import { crearApiCrud } from "./crud-basico.js";
 import { DiccionariosTablas } from "./diccionariosGetTablas.js";
 import { chequearCantidadAprobadas } from "./aprobadas.js";
+
 
 const app = express()
 app.use(express.json());
@@ -120,7 +122,7 @@ app.get('/app/archivo-json', requireAuth, (_, res) => {
 })
 
 async function getDbClient() {
-    const client = new Client();
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
     await client.connect();
     return client;
 }

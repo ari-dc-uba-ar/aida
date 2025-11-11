@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Client } from "pg"
 import { readFile, writeFile } from "fs/promises"
 import * as Path from 'path';
@@ -8,6 +9,7 @@ import { DatoAtomico, datoATexto, sqlLiteral } from "./tipos-atomicos.js"
 import { leerYParsearCsv } from "./csv.js"
 import { DefinicionesDeOperaciones } from "./orquestador.js";
 import { leerYParsearJson } from "./json.js"
+
 
 export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
@@ -81,7 +83,7 @@ export async function cargarNovedadesAlumnosDesdeCsv(clientDb:Client, archivoCsv
 
 export async function cargarNovedadesAlumnosDesdeJson(alumnosJson: any[]){
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearJson(alumnosJson);
-    const clientDb = new Client()
+    const clientDb = new Client({ connectionString: process.env.DATABASE_URL })
     await clientDb.connect()
     await cargarNuevosAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
     await clientDb.end();

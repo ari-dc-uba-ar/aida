@@ -1,5 +1,7 @@
+import 'dotenv/config';
 import {Client} from "pg";
 import { generarCertificadoAlumnoLu } from './aida.js';
+
 
 export async function chequearCantidadAprobadas(lu: string): Promise<string> {
     const queryVerAprobadasPorAlumno = `
@@ -24,7 +26,7 @@ export async function chequearCantidadAprobadas(lu: string): Promise<string> {
                 egreso = $1
             WHERE lu = $2
     `;
-    const clientDb = new Client();
+    const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
     await clientDb.connect();
     const VerAprobadas = await clientDb.query(queryVerAprobadasPorAlumno, [lu]);
     const VerMateriasEnCarrera = await clientDb.query(QueryVerMateriasEnCarrera, [lu]);

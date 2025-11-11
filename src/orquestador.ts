@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Client } from 'pg';
 
 export type DefinicionDeOperacion = {
@@ -16,7 +17,7 @@ export type ListaDeEjecucion = ElementoDeEjecucion[]
 export async function orquestador(definicionOperaciones:DefinicionesDeOperaciones, listaDeEjecucion: ListaDeEjecucion){
     let resultado:any = null;
     console.log('Por procesar', listaDeEjecucion);
-    const clientDb = new Client()
+    const clientDb = new Client({ connectionString: process.env.DATABASE_URL })
     await clientDb.connect()
     for (const {operacion, argumentos} of listaDeEjecucion) {
         console.log('procesando', operacion);
