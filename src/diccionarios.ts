@@ -47,7 +47,8 @@ const CamposAlumno: Campos[] = [
     { id: 'nombres', nombre: 'nombres', Titulo: 'Nombres', tipo: 'text', nuevoNombre: 'nuevoNombre' },
     { id: 'titulo', nombre: 'titulo', Titulo: 'Título', tipo: 'text', nuevoNombre: 'nuevoTitulo' },
     { id: 'titulo_en_tramite', nombre: 'titulo_en_tramite', Titulo: 'Título en Trámite', tipo: 'date', nuevoNombre: 'nuevoEstadoTramiteTitulo' },
-    { id: 'egreso', nombre: 'egreso', Titulo: 'Fecha de Egreso', tipo: 'date', nuevoNombre: 'nuevaFechaDeEgreso' }
+    { id: 'egreso', nombre: 'egreso', Titulo: 'Fecha de Egreso', tipo: 'date', nuevoNombre: 'nuevaFechaDeEgreso' },
+    { id:'mail', nombre:'mail', Titulo: 'Mail', tipo:'text', nuevoNombre: 'nuevoMail'}
 ];
 
 const CamposMateria: Campos[] = [
@@ -95,7 +96,8 @@ const InicializarDatosPorTabla: InicializarDatos[] = [
             nuevoNombre: '',
             nuevoTitulo: '',
             nuevoEstadoTramiteTitulo: 'dd/mm/yy',
-            nuevaFechaDeEgreso: 'dd/mm/yy'
+            nuevaFechaDeEgreso: 'dd/mm/yy',
+            mail: ''
         }
     },
     {
@@ -141,7 +143,8 @@ const DatosCreadosPorTabla: DatosCreadosPorTabla[] = [
             nombres: '',
             titulo: '',
             titulo_en_tramite: null,
-            egreso: null
+            egreso: null,
+            mail:''
         }
     },
     {
@@ -233,7 +236,8 @@ const CamposParaEditarAlumno: CamposParaEditar[] = [
     { id: 'nombres', nombre: 'nombres', nombreActual: 'nombres_actual', Titulo: 'Nombres', tipo: 'text', nuevoNombre: 'nuevoNombre', placeholder: 'Nombres del Alumno', disabled: false },
     { id: 'titulo', nombre: 'titulo', nombreActual: 'titulo_actual', Titulo: 'Título', tipo: 'text', nuevoNombre: 'nuevoTitulo', placeholder: 'Título del Alumno', disabled: false },
     { id: 'titulo_en_tramite', nombre: 'titulo_en_tramite', nombreActual: 'titulo_en_tramite_actual', Titulo: 'Título en Trámite', tipo: 'date', nuevoNombre: 'nuevoEstadoTramiteTitulo', placeholder: 'YYYY-MM-DD', disabled: false },
-    { id: 'egreso', nombre: 'egreso', nombreActual: 'egreso_actual', Titulo: 'Fecha de Egreso', tipo: 'date', nuevoNombre: 'nuevaFechaDeEgreso', placeholder: 'YYYY-MM-DD', disabled: false }
+    { id: 'egreso', nombre: 'egreso', nombreActual: 'egreso_actual', Titulo: 'Fecha de Egreso', tipo: 'date', nuevoNombre: 'nuevaFechaDeEgreso', placeholder: 'YYYY-MM-DD', disabled: false },
+    { id: 'mail', nombre:'mail', nombreActual:'mail_actual', Titulo:'Mail', tipo:'text', nuevoNombre:'nuevoMail', placeholder:'Mail del alumno', disabled:false}
 ];
 
 const CamposParaEditarMateria: CamposParaEditar[] = [
@@ -279,7 +283,8 @@ const CamposParaCargarAlumno: camposParaCargar[] = [
     { id: 'nombres', nombreActual: 'nombres_actual', nuevoNombre: 'nuevoNombre', fecha: false },
     { id: 'titulo', nombreActual: 'titulo_actual', nuevoNombre: 'nuevoTitulo', fecha: false },
     { id: 'titulo_en_tramite', nombreActual: 'titulo_en_tramite_actual', nuevoNombre: 'nuevoEstadoTramiteTitulo', fecha: true },
-    { id: 'egreso', nombreActual: 'egreso_actual', nuevoNombre: 'nuevaFechaDeEgreso', fecha: true }
+    { id: 'egreso', nombreActual: 'egreso_actual', nuevoNombre: 'nuevaFechaDeEgreso', fecha: true },
+    { id: 'mail', nombreActual: 'mail_actual', nuevoNombre:'nuevoMail', fecha:false}
 ];
 
 const CamposParaCargarMateria: camposParaCargar[] = [
@@ -339,7 +344,8 @@ const DatosEditadosPorTabla: DatosEditadosPorTabla[] = [
             nombres: '',
             titulo: '',
             titulo_en_tramite: null,
-            egreso: null
+            egreso: null,
+            mail:''
         }
     },
     {

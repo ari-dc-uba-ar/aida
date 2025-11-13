@@ -39,8 +39,8 @@ interface QueryDeletePorTabla{
 
 const queryUpdatePorTabla: QueryUpdatePorTabla[] = [
     { tabla: 'alumnos',
-      queryUpdate: `UPDATE aida.alumnos SET apellido=$1, nombres=$2, titulo=$3, titulo_en_tramite=$4, egreso=$5 WHERE lu=$6`,
-      campos: ['apellido', 'nombres', 'titulo', 'titulo_en_tramite', 'egreso', 'lu']},
+      queryUpdate: `UPDATE aida.alumnos SET apellido=$1, nombres=$2, titulo=$3, titulo_en_tramite=$4, egreso=$5, mail=$6 WHERE lu=$7`,
+      campos: ['apellido', 'nombres', 'titulo', 'titulo_en_tramite', 'egreso', 'mail', 'lu']},
       {
         tabla: 'materia',
         queryUpdate: `UPDATE aida.materia SET nombre=$1 WHERE id_materia=$2`,
@@ -61,8 +61,8 @@ const queryUpdatePorTabla: QueryUpdatePorTabla[] = [
 const queryInsertPorTabla: QueryInsertPorTabla[] = [
     { tabla: 'alumnos',
       queryInsert: `INSERT INTO aida.alumnos
-                (lu,apellido,nombres,titulo,titulo_en_tramite,egreso) VALUES ($1,$2,$3,$4,$5,$6)`,
-      campos: ['lu', 'apellido', 'nombres', 'titulo', 'titulo_en_tramite', 'egreso']},
+                (lu,apellido,nombres,titulo,titulo_en_tramite,egreso,mail) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      campos: ['lu', 'apellido', 'nombres', 'titulo', 'titulo_en_tramite', 'egreso', 'mail']},
       {
         tabla: 'materia',
         queryInsert: `INSERT INTO aida.materia
@@ -103,7 +103,8 @@ const queryImportarPorTabla: QueryImportarPorTabla[] = [
                 nombres,
                 titulo,
                 TO_CHAR(titulo_en_tramite, 'YYYY-MM-DD') AS titulo_en_tramite,
-                TO_CHAR(egreso, 'YYYY-MM-DD') AS egreso
+                TO_CHAR(egreso, 'YYYY-MM-DD') AS egreso,
+                mail
             FROM aida.alumnos`,
       },
       {

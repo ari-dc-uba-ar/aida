@@ -14,7 +14,7 @@ export const DiccionariosTablas: DatosPorTabla[] = [
         text: 'Alumnos',
         crear: 'Crear Alumno',
         urlCreacion: '/app/alumno/crearAlumno',
-        campos: ['LU', 'Apellido', 'Nombres', 'Título', 'Título en trámite', 'Egreso'],
+        campos: ['LU', 'Apellido', 'Nombres', 'Título', 'Título en trámite', 'Egreso', 'mail'],
         urlEdicion: '/app/alumno/editarAlumno/',
         pk: ['lu']
     },

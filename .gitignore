@@ -6,3 +6,4 @@ local-*
 dist/
 node_modules/
 .env
+.vscode/
