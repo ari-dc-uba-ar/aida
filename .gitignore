@@ -1,11 +1,9 @@
-dist/
-dist-test/
-
 node_modules/
 
 local-*
-*-local.*
 *-local
-
-certificado-para-imprimir.html
-certificado-de-*-para-imprimir.html
+**/certificado*
+dist/
+node_modules/
+.env
+.vscode/
