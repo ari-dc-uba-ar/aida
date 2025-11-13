@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "baseUrl": "",
+        "strictNullChecks": false,
+        "outDir": "../dist-test",
+        "moduleResolution": "node",
+        "target": "esnext",
+        "module": "ESNext",
+        "lib":["es2022"],
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "strict": true,
+        "strictBindCallApply": true,
+        "skipLibCheck": true, //para que no haga chequeo de tipos en los declaration files dentro de node-modules(pg-promise-strict, express, node)
+        // "typeRoots" : ["node_modules/@types", "node_modules/types.d.ts/modules"],
+        "declarationMap": true,
+        "noImplicitAny": true,
+        "alwaysStrict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true
+    },
+    "include":[
+        "."
+    ],
+}

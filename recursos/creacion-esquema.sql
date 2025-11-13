@@ -1,4 +1,5 @@
 set role to aida_owner;
+drop schema if exists aida cascade;
 create schema aida;
 grant usage on schema aida to aida_admin;
 
