@@ -5,3 +5,4 @@ local-*
 **/certificado*
 dist/
 node_modules/
+.env

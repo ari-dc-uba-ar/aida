@@ -410,14 +410,11 @@ function getEndPoints(tabla: string) {
     });
 
     const urlEdicion = datosTabla!.urlEdicion;
-    app.get(`${urlEdicion}:lu`, requireAuth, (req, res) => {
-        const luAlumno = req.params.lu;
-        console.log(`Solicitud de edición para el alumno con LU: ${luAlumno}`);
+    app.get(`${urlEdicion}:lu`, requireAuth, (_, res) => {
         res.sendFile(`${process.cwd()}/editarGenerico.html`);
     });
     const urlCreacion = datosTabla!.urlCreacion;
     app.get(`${urlCreacion}`, requireAuth, (_, res) => {
-        console.log(`Solicitud de Creacion de un Alumno`);
         res.sendFile(`${process.cwd()}/crearGenerico.html`);
     });
 

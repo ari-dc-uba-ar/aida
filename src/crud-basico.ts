@@ -36,13 +36,6 @@ interface QueryDeletePorTabla{
     queryDelete: string;
 }
 
-/*const clavesPorTabla: KeyPorTabla[] = [
-    { tabla: 'alumnos', key: ['lu'] },
-    { tabla: 'materia', key: ['id_materia'] },
-    { tabla: 'carrera', key: ['id_carrera'] },
-    { tabla: 'materiasporcarrera', key: ['id_carrera', 'id_materia']},
-    { tabla: 'alumnosporcarrera', key: ['lu', 'id_carrera']}
-];*/
 
 const queryUpdatePorTabla: QueryUpdatePorTabla[] = [
     { tabla: 'alumnos',
@@ -57,16 +50,6 @@ const queryUpdatePorTabla: QueryUpdatePorTabla[] = [
         tabla: 'carrera',
         queryUpdate: `UPDATE aida.carrera SET nombre=$1 WHERE id_carrera=$2`,
         campos: ['nombre', 'id_carrera']
-      },
-      {
-        tabla: 'materiasporcarrera',
-        queryUpdate: `UPDATE aida.materiasporcarrera SET id_carrera=$1, id_materia=$2 WHERE id_carrera=$3 AND id_materia=$4`,
-        campos: ['id_carrera', 'id_materia', 'id_carrera_actual', 'id_materia_actual']
-      },
-      {
-        tabla: 'alumnosporcarrera',
-        queryUpdate: `UPDATE aida.alumnosporcarrera SET lu=$1, id_carrera=$2 WHERE lu=$3 AND id_carrera=$4`,
-        campos: ['lu', 'id_carrera', 'lu_actual', 'id_carrera_actual']
       },
       {
         tabla: 'cursada',
@@ -199,7 +182,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
     app.get(ruta, requireAuthAPI, async (req, res) => {
         const tabla = req.params.tabla;
         const query = queryImportarPorTabla.find(q => q.tabla === tabla)?.queryImportar;
-        console.log('Listando alumnos');
+        console.log('Listando la tabla:', tabla);
         const clientDb = new Client({ connectionString: process.env.DATABASE_URL });
         await clientDb.connect();
         if(query){
@@ -207,7 +190,7 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
                 var items = await clientDb.query(query);
                 res.json(items.rows);
             } catch (error) {
-                console.error(`Error al listar alumnos:`, error);
+                console.error(`Error al listar los datos:`, error);
                 res.status(500).json({ error: 'Error al listar los datos' });
             } finally {
                 await clientDb.end();
@@ -223,12 +206,11 @@ export function crearApiCrud(app:Express.Application, rutaApi:string, requireAut
         await clientDb.connect();
         try {
             const ids = req.params.id.split('_');
-            console.log(ids);
             var items = await clientDb.query(query!, ids);
             console.log('Datos listados correctamente');
             res.json(items.rows[0]);
         } catch (error) {
-            console.error(`Error al listar alumnos:`, error);
+            console.error(`Error al listar los datos:`, error);
             res.status(500).json({ error: 'Error al listar los datos' });
         } finally {
             clientDb.end();

@@ -57,14 +57,13 @@ window.addEventListener('load', async function() {
     }
     var req = await fetch('http://localhost:3000/api/v0/' + (datosTabla!.tabla === 'alumno' ? 'alumnos' : datosTabla!.tabla) + '/');
     var data = await req.json();
-    console.log(data);
     data.forEach((registro:Record<string, string>) => {
         var row = table.insertRow();
         for (const elemento of Object.entries(registro)){
             cel(row, elemento[1]);
         }
 
-        var celdaEditar = row.insertCell();
+
         var botonEditar = dom('button', { class: 'boton-editar' }, [text('Editar')]) as HTMLButtonElement;
 
         botonEditar.onclick = () => {
@@ -83,9 +82,10 @@ window.addEventListener('load', async function() {
             console.log(`Abriendo ventana para editar al ID: ${id}`);
             window.location.href = urlEdicion;
         };
-
-        celdaEditar.appendChild(botonEditar);
-
+        if(tabla != 'materiasporcarrera' && tabla != 'alumnosporcarrera'){
+            var celdaEditar = row.insertCell();
+            celdaEditar.appendChild(botonEditar);
+        }
         var celdaBorrar = row.insertCell();
         var botonBorrar = dom('button', { class: 'boton-borrar', type: 'button' }, [text('Borrar')]) as HTMLButtonElement;
 
@@ -108,12 +108,12 @@ window.addEventListener('load', async function() {
                 });
                 console.log(req.status);
                 if (req.ok) {
-                    alert('Alumno borrado correctamente.');
+                    alert('Datos borrados correctamente.');
                     window.location.reload();
                 }
             }
             catch(error){
-                console.error('Error al borrar el alumno: ', error);
+                console.error('Error al borrar los datos: ', error);
                 alert('Error al borrar los datos.');
             }
         };

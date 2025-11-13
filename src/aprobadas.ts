@@ -2,7 +2,7 @@ import 'dotenv/config';
 import {Client} from "pg";
 import { generarCertificadoAlumnoLu } from './aida.js';
 
-
+// Este chequeo se hace solo al crear una cursada porque se asume que las notas se cargan bien
 export async function chequearCantidadAprobadas(lu: string): Promise<string> {
     const queryVerAprobadasPorAlumno = `
         SELECT COUNT(nota) AS cantidad_aprobadas
