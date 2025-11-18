@@ -38,15 +38,20 @@ jobs:
         run: npm test
 
   # =======================================================
-  # JOB 2 — Deploy manual (solo MAIN)
+  # JOB 2 — Deploy manual (MAIN y TEST*)
   # =======================================================
   manual-deploy:
     needs: build-and-test
+
+    # Ejecutar solo si la branch es main O empieza con test
+    if: |
+      github.ref == 'refs/heads/main' ||
+      startsWith(github.ref, 'refs/heads/test')
+
     runs-on: ubuntu-latest
 
     environment:
-      name: DEPLOYMENT
-      url: ${{ secrets.URL_DEPLOYMENT }}
+      name: DEPLOYMENT   # sin URL (no acepta secrets)
 
     steps:
       - name: Aprobar manualmente
