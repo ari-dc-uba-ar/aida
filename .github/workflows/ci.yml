@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - 'feature-*'
+      - 'test-*'
       - main
   pull_request:
     branches:
       - 'feature-*'
+      - 'test-*'
       - main
 
 jobs:
@@ -51,7 +53,7 @@ jobs:
         uses: trstringer/manual-approval@v1
         with:
           minimum-approvals: 1
-          approvers: ""         
+          approvers: ""
 
       - name: Disparar deploy (GET)
         run: |
