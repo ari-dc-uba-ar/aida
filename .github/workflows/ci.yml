@@ -40,28 +40,15 @@ jobs:
   # =======================================================
   # JOB 2 — Deploy manual (MAIN y TEST*)
   # =======================================================
-  manual-deploy:
-    needs: build-and-test
+manual-deploy:
+  needs: build-and-test
+  if: |
+    github.ref == 'refs/heads/main' ||
+    startsWith(github.ref, 'refs/heads/test')
+  runs-on: ubuntu-latest
+  environment:
+    name: DEPLOYMENT
 
-    # Ejecutar solo si la branch es main O empieza con test
-    if: |
-      github.ref == 'refs/heads/main' ||
-      startsWith(github.ref, 'refs/heads/test')
-
-    runs-on: ubuntu-latest
-
-    environment:
-      name: DEPLOYMENT
-
-    steps:
-      - name: Aprobar manualmente
-        uses: trstringer/manual-approval@v1
-        with:
-          minimum-approvals: 1
-          approvers: "anyone"
-          secret: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: Disparar deploy (GET)
-        run: |
-          curl "${{ secrets.URL_DEPLOYMENT }}"
+  steps:
+    - name: Disparar deploy (GET)
+      run: curl "${{ secrets.URL_DEPLOYMENT }}"
