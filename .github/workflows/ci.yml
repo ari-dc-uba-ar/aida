@@ -58,7 +58,7 @@ jobs:
         uses: trstringer/manual-approval@v1
         with:
           minimum-approvals: 1
-          approvers: ""
+          approvers: "anyone"
 
       - name: Disparar deploy (GET)
         run: |
