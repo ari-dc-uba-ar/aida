@@ -40,15 +40,17 @@ jobs:
   # =======================================================
   # JOB 2 — Deploy manual (MAIN y TEST*)
   # =======================================================
-manual-deploy:
-  needs: build-and-test
-  if: |
-    github.ref == 'refs/heads/main' ||
-    startsWith(github.ref, 'refs/heads/test')
-  runs-on: ubuntu-latest
-  environment:
-    name: DEPLOYMENT
+  manual-deploy:
+    needs: build-and-test
+    if: |
+      github.ref == 'refs/heads/main' ||
+      startsWith(github.ref, 'refs/heads/test')
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Disparar deploy (GET)
-      run: curl "${{ secrets.URL_DEPLOYMENT }}"
+    environment:
+      name: DEPLOYMENT
+
+    steps:
+      - name: Disparar deploy (GET)
+        run: |
+          curl "${{ secrets.URL_DEPLOYMENT }}"
