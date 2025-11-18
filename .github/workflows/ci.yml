@@ -2,11 +2,18 @@ name: CI
 
 on:
   push:
-    branches: [ test-ci ]
+    branches:
+      - 'feature-*'
+      - main
   pull_request:
-    branches: [ test-ci ]
+    branches:
+      - 'feature-*'
+      - main
 
 jobs:
+  # =======================================================
+  # JOB 1 — Build + Test
+  # =======================================================
   build-and-test:
     runs-on: ubuntu-latest
 
@@ -27,3 +34,25 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  # =======================================================
+  # JOB 2 — Deploy manual (solo MAIN)
+  # =======================================================
+  manual-deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    environment:
+      name: DEPLOYMENT
+      url: ${{ secrets.URL_DEPLOYMENT }}
+
+    steps:
+      - name: Aprobar manualmente
+        uses: trstringer/manual-approval@v1
+        with:
+          minimum-approvals: 1
+          approvers: ""         
+
+      - name: Disparar deploy (GET)
+        run: |
+          curl "${{ secrets.URL_DEPLOYMENT }}"
