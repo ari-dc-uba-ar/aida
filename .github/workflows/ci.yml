@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: DEPLOYMENT   # sin URL (no acepta secrets)
+      name: DEPLOYMENT
 
     steps:
       - name: Aprobar manualmente
@@ -59,6 +59,8 @@ jobs:
         with:
           minimum-approvals: 1
           approvers: "anyone"
+          secret: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Disparar deploy (GET)
         run: |
