@@ -206,6 +206,7 @@ app.get('/app/archivo', requireAuth, (_, res) => {
 
 // Endpoint para obtener todos los alumnos en formato JSON
 app.get('/api/v0/alumnos', requireAuthAPI, async (_, res) => {
+    console.log(process.env.DATABASE_URL)
     const clientDb = new Client({
         connectionString: process.env.DATABASE_URL
     });
@@ -227,11 +228,7 @@ const alumnosTemplate = Handlebars.compile(templateSource);
 // Función para obtener la conexión a la base de datos
 async function getDbClient() {
     const client = new Client({
-        host: process.env.PGHOST,
-        port: parseInt(process.env.PGPORT || '5432'),
-        database: process.env.PGDATABASE,
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD
+        connectionString: process.env.DATABASE_URL
     });
     await client.connect();
     return client;
