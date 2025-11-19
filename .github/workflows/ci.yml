@@ -3,7 +3,7 @@ name: MiPrimerWorkflow
 on:
   push:
     branches:
-      - main
+      - test*
 
 jobs:
   saludo:
