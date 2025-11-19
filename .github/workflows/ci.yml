@@ -1,14 +1,54 @@
-name: MiPrimerWorkflow
+name: CI
 
 on:
   push:
     branches:
-      - '*'
+      - 'feature*'
+      - 'test*'
+      - main
+  pull_request:
+    branches:
+      - 'feature*'
+      - 'test*'
 
 jobs:
-  saludo:
+  # =======================================================
+  # JOB 1 — Build + Test
+  # =======================================================
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Saludar por consola
-        run: echo "Hola! Este es mi primer pipeline"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+
+      - name: Install dependencies
+        run: npm ci --verbose
+
+      - name: Run build
+        run: npm run build --if-present
+
+      - name: Run tests
+        run: npm test
+
+  # =======================================================
+  # JOB 2 — Deploy manual (MAIN y TEST*)
+  # =======================================================
+  manual-deploy:
+    needs: build-and-test
+    if: |
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: DEPLOYMENT
+
+    steps:
+      - name: Disparar deploy (GET)
+        run: |
+          curl "${{ secrets.URL_DEPLOYMENT }}"
