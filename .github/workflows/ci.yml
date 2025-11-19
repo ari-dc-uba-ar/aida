@@ -1,56 +1,20 @@
-name: CI
+name: MiPrimerWorkflow
 
 on:
   push:
     branches:
-      - 'feature*'
-      - 'test*'
-      - main
-  pull_request:
-    branches:
-      - 'feature*'
-      - 'test*'
       - main
 
 jobs:
-  # =======================================================
-  # JOB 1 — Build + Test
-  # =======================================================
-  build-and-test:
+  saludo:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Descargar el repositorio
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.14.0'
+      - name: Saludar por consola
+        run: echo "Hola! Este es mi primer pipeline"
 
-      - name: Install dependencies
-        run: npm ci --verbose
-
-      - name: Run build
-        run: npm run build --if-present
-
-      - name: Run tests
-        run: npm test
-
-  # =======================================================
-  # JOB 2 — Deploy manual (MAIN y TEST*)
-  # =======================================================
-  manual-deploy:
-    needs: build-and-test
-    if: |
-      github.ref == 'refs/heads/main' ||
-      startsWith(github.ref, 'refs/heads/test')
-    runs-on: ubuntu-latest
-
-    environment:
-      name: DEPLOYMENT
-
-    steps:
-      - name: Disparar deploy (GET)
-        run: |
-          curl "${{ secrets.URL_DEPLOYMENT }}"
+      - name: Mostrar archivos del proyecto
+        run: ls -la
