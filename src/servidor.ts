@@ -1,27 +1,28 @@
 import 'dotenv/config';
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
+//import session, { SessionData } from 'express-session';
 import session from 'express-session';
-import { Client } from "pg";
-
-import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
-import { operacionesAida, obtenerTodosLosAlumnos } from './aida.js';
 import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
+import { Request, Response, NextFunction } from "express";
 import * as fs from 'fs';
-import Handlebars from 'handlebars';
+import { Client } from "pg";
+import { DefinicionesDeOperaciones, orquestador } from './orquestador.js';
+import { cargarNovedadesAlumnosDesdeJson, operacionesAida } from './aida.js'
+import { crearApiCrud } from "./crud-basico.js";
+import { DiccionariosTablas } from "./diccionariosGetTablas.js";
+import { chequearCantidadAprobadas } from "./aprobadas.js";
 
-// Extender tipos de sesión para incluir usuario
+
+const app = express()
+app.use(express.json());
+const port = 3000
+
 declare module 'express-session' {
     interface SessionData {
         usuario?: Usuario;
     }
 }
 
-const app = express()
-const port = process.env.PORT || 3000
-
-app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
-
-// Configuración de sesiones
 app.use(session({
     secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion',
     resave: false,
@@ -32,37 +33,110 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24  // 1 días
     }
 }));
+app.use(express.json({ limit: '10mb' })); // para poder leer el body
+app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
+app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
 
-// Middleware para verificar autenticación en páginas HTML
-function requireAuth(req: Request, res: Response, next: NextFunction) {
-    if (req.session.usuario) {
-        next();
-    } else {
-        res.redirect('/app/login');
+// endpoint de prueba
+app.get('/ask', (req, res) => {
+    var htmlResponse = '<!doctype html>\n<html>\n<head>\n<meta charset="utf8">\n</head>\n<body>';
+    if (JSON.stringify(req.query).length > 2) {
+        htmlResponse += '<div>Yes ' + JSON.stringify(req.query) + '</div>';
     }
+    if (req.body) {
+        htmlResponse += '<div>Body: ' + JSON.stringify(req.body) + '</div>';
+    }
+    htmlResponse + '</body></html>'
+    res.send(htmlResponse);
+})
+
+// Servidor del frontend:
+app.get('/app/archivo', requireAuth, (_, res) => {
+    res.redirect('/app/archivo-json');
+})
+
+const HTML_ARCHIVO_JSON=
+`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CSV Upload</title>
+</head>
+<body>
+  <h2>Subir archivo CSV</h2>
+  <input type="file" id="csvFile" accept=".csv" />
+  <button onclick="handleUpload()">Procesar y Enviar</button>
+
+  <script>
+    function parseCSV(text) {
+      const lines = text.trim().split(/\\r?\\n/);
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj = {};
+        headers.forEach((header, i) => {
+          obj[header] = values[i];
+        });
+        return obj;
+      });
+      return data;
+    }
+
+    async function handleUpload() {
+      const fileInput = document.getElementById('csvFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Por favor seleccioná un archivo CSV.');
+        return;
+      }
+
+      const text = await file.text();
+      const jsonData = parseCSV(text);
+
+      try {
+        const response = await fetch('/api/v0/alumnos', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(jsonData)
+        });
+
+        if (response.ok) {
+          alert('Datos enviados correctamente.');
+        } else {
+          alert('Error al enviar los datos.');
+        }
+      } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('Error de red o en el servidor.');
+      }
+    }
+  </script>
+</body>
+</html>
+`;
+
+app.get('/app/archivo-json', requireAuth, (_, res) => {
+    res.send(HTML_ARCHIVO_JSON)
+})
+
+async function getDbClient() {
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    await client.connect();
+    return client;
 }
 
-// Middleware para verificar autenticación en API (retorna JSON)
-function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
-    if (req.session.usuario) {
-        next();
-    } else {
-        res.status(401).json({ error: 'No autenticado' });
-    }
-}
+//API de login
 
-// ============= ENDPOINTS DE AUTENTICACIÓN =============
-
-// Página de login
 app.get('/app/login', (req, res) => {
     if (req.session.usuario) {
         return res.redirect('/app/menu');
     }
-    const loginHtml = fs.readFileSync('./src/views/login.html', 'utf8');
+    const loginHtml = fs.readFileSync('login.html', 'utf8');
     res.send(loginHtml);
 });
 
-// API de login
 app.post('/api/v0/auth/login', express.json(), async (req, res) => {
     const { username, password } = req.body;
 
@@ -94,6 +168,25 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
         await clientDb.end();
     }
 });
+
+//Funciones middleware de Auth
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.redirect('/app/login');
+    }
+}
+
+
+function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.status(401).json({ error: 'No autenticado' });
+    }
+}
+
 
 // API de logout
 app.post('/api/v0/auth/logout', (req, res) => {
@@ -137,329 +230,26 @@ app.post('/api/v0/auth/register', express.json(), async (req, res) => {
     }
 });
 
-// ============= FIN ENDPOINTS DE AUTENTICACIÓN =============
-
-// endpoint de prueba
-app.get('/ask', (req, res) => {
-    var htmlResponse = '<!doctype html>\n<html>\n<head>\n<meta charset="utf8">\n</head>\n<body>';
-    if (JSON.stringify(req.query).length > 2) {
-        htmlResponse += '<div>Yes ' + JSON.stringify(req.query) + '</div>';
-    }
-    if (req.body) {
-        htmlResponse += '<div>Body: ' + JSON.stringify(req.body) + '</div>';
-    }
-    htmlResponse + '</body></html>'
-    res.send(htmlResponse);
-})
-
-// Servidor del frontend:
-const HTML_ARCHIVO=
-`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>CSV Upload</title>
-</head>
-<body>
-  <h2>Subir archivo CSV</h2>
-  <input type="file" id="csvFile" accept=".csv" />
-  <button onclick="handleUpload()">Procesar y Enviar</button>
-
-  <script>
-    async function handleUpload() {
-      const fileInput = document.getElementById('csvFile');
-      const file = fileInput.files[0];
-      if (!file) {
-        alert('Por favor seleccioná un archivo CSV.');
-        return;
-      }
-
-      const text = await file.text();
-
-      try {
-        const response = await fetch('../api/v0/alumnos', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'text/csv'
-          },
-          body: text
-        });
-
-        if (response.ok) {
-          alert('Datos enviados correctamente.');
-        } else {
-          alert('Error al enviar los datos.');
-        }
-      } catch (error) {
-        console.error('Error en la solicitud:', error);
-        alert('Error de red o en el servidor.');
-      }
-    }
-  </script>
-</body>
-</html>
-`;
-
-app.get('/app/archivo', requireAuth, (_, res) => {
-    res.send(HTML_ARCHIVO)
-})
-
-// Endpoint para obtener todos los alumnos en formato JSON
-app.get('/api/v0/alumnos', requireAuthAPI, async (_, res) => {
-    console.log(process.env.DATABASE_URL)
-    const clientDb = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
-    try {
-        await clientDb.connect();
-        const alumnos = await obtenerTodosLosAlumnos(clientDb);
-        res.json(alumnos);
-    } catch (error) {
-        console.error('Error al obtener los alumnos:', error);
-    } finally {
-        await clientDb.end();
-    }
-})
-
-// Cargar la plantilla
-const templateSource = fs.readFileSync('./src/views/alumnos.html', 'utf8');
-const alumnosTemplate = Handlebars.compile(templateSource);
-
-// Función para obtener la conexión a la base de datos
-async function getDbClient() {
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
-    await client.connect();
-    return client;
-}
-
-// Endpoint para mostrar la tabla de alumnos
-app.get('/app/alumnos', requireAuth, async (_, res) => {
-    const clientDb = await getDbClient();
-
-    try {
-        const alumnos = await obtenerTodosLosAlumnos(clientDb);
-
-        if (!alumnos || alumnos.length === 0) {
-            return res.send(`
-                <!DOCTYPE html>
-                <html>
-                <head><title>Lista de Alumnos</title></head>
-                <body>
-                    <h1>Lista de Alumnos</h1>
-                    <p>No hay alumnos registrados.</p>
-                </body>
-                </html>
-            `);
-        }
-
-        // Preparar los datos para la plantilla
-        const columnas = Object.keys(alumnos[0] as Record<string, unknown>);
-        const alumnosData = alumnos.map((alumno: Record<string, unknown>) => {
-            const row: Record<string, string> = {};
-            columnas.forEach(col => {
-                row[col] = alumno[col] !== null && alumno[col] !== undefined ? String(alumno[col]) : '';
-            });
-            return row;
-        });
-
-        // Renderizar la plantilla con los datos
-        const html = alumnosTemplate({
-            alumnos: alumnosData,
-            columnas: columnas
-        });
-
-        return res.send(html);
-    } catch (error) {
-        console.error('Error al obtener los alumnos:', error);
-        return res.status(500).send('Error al cargar la lista de alumnos');
-    } finally {
-        try {
-            await clientDb.end();
-        } catch (e) {
-            console.error('Error cerrando la conexión a la base de datos:', e);
-        }
-    }
-});
-
-// Endpoint para crear un nuevo alumno
-app.post('/api/v0/alumnos', requireAuthAPI, express.json(), async (req, res) => {
-    const clientDb = await getDbClient();
-
-    try {
-        const alumno = req.body;
-        const columnas = Object.keys(alumno);
-        const valores = columnas.map(col => alumno[col]);
-        const placeholders = columnas.map((_, i) => `$${i + 1}`).join(', ');
-
-        const query = `
-            INSERT INTO aida.alumnos (${columnas.join(', ')})
-            VALUES (${placeholders})
-            RETURNING *
-        `;
-
-        const result = await clientDb.query(query, valores);
-        res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error('Error al crear el alumno:', error);
-        res.status(500).json({ error: 'Error al crear el alumno' });
-    } finally {
-        await clientDb.end();
-    }
-});
-
-// Endpoint para   un alumno
-app.put('/api/v0/alumnos/:lu', express.json(), async (req, res) => {
-    const clientDb = await getDbClient();
-    const { lu } = req.params;
-
-    try {
-        const updates = req.body;
-
-        if (!updates || Object.keys(updates).length === 0) {
-            return res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
-        }
-
-        const setClause = Object.keys(updates)
-            .map((key, i) => `${key} = $${i + 1}`)
-            .join(', ');
-        const valores = [...Object.values(updates), lu];
-
-        const query = `
-            UPDATE aida.alumnos
-            SET ${setClause}
-            WHERE lu = $${valores.length}
-            RETURNING *
-        `;
-
-        const result = await clientDb.query(query, valores);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Alumno no encontrado' });
-        }
-
-        return res.json(result.rows[0]);
-    } catch (error) {
-        console.error('Error al actualizar el alumno:', error);
-        return res.status(500).json({ error: 'Error al actualizar el alumno' });
-    } finally {
-        try {
-            await clientDb.end();
-        } catch (e) {
-            console.error('Error cerrando la conexión a la base de datos:', e);
-        }
-    }
-});
-
-// Endpoint para eliminar un alumno
-app.delete('/api/v0/alumnos/:lu', requireAuthAPI, async (req, res) => {
-    const clientDb = await getDbClient();
-    const { lu } = req.params;
-
-    try {
-        // Primero verificar si el alumno existe
-        const checkResult = await clientDb.query(
-            'SELECT * FROM aida.alumnos WHERE lu = $1',
-            [lu]
-        );
-
-        if (checkResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Alumno no encontrado' });
-        }
-
-        // Si existe, proceder con la eliminación
-        await clientDb.query(
-            'DELETE FROM aida.alumnos WHERE lu = $1',
-            [lu]
-        );
-
-        return res.json({ message: 'Alumno eliminado correctamente' });
-    } catch (error) {
-        console.error('Error al eliminar el alumno:', error);
-        return res.status(500).json({ error: 'Error al eliminar el alumno' });
-    } finally {
-        try {
-            await clientDb.end();
-        } catch (e) {
-            console.error('Error cerrando la conexión a la base de datos:', e);
-        }
-    }
-});
-
-const HTML_ARCHIVO_JSON=
-`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>CSV Upload</title>
-</head>
-<body>
-  <h2>Subir archivo CSV</h2>
-  <input type="file" id="csvFile" accept=".csv" />
-  <button onclick="handleUpload()">Procesar y Enviar</button>
-
-  <script>
-    function parseCSV(text) {
-      const lines = text.trim().split(/\\r?\\n/);
-      const headers = lines[0].split(',').map(h => h.trim());
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header] = values[i];
-        });
-        return obj;
-      });
-      return data;
-    }
-
-    async function handleUpload() {
-      const fileInput = document.getElementById('csvFile');
-      const file = fileInput.files[0];
-      if (!file) {
-        alert('Por favor seleccioná un archivo CSV.');
-        return;
-      }
-
-      const text = await file.text();
-      const jsonData = parseCSV(text);
-
-      try {
-        const response = await fetch('../api/v0/alumnos', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(jsonData)
-        });
-
-        if (response.ok) {
-          alert('Datos enviados correctamente.');
-        } else {
-          alert('Error al enviar los datos.');
-        }
-      } catch (error) {
-        console.error('Error en la solicitud:', error);
-        alert('Error de red o en el servidor.');
-      }
-    }
-  </script>
-</body>
-</html>
-`;
-
-app.get('/app/archivo-json', requireAuth, (_, res) => {
-    res.send(HTML_ARCHIVO_JSON)
-})
-
-
 // API DEL BACKEND
 function apiBackend(operaciones: DefinicionesDeOperaciones) {
 
-    var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
+   //Pagina del menu
 
-    var menu = '<h1>AIDA API</h1><ul>';
+    var menu = `<!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/app/styleMenu.css">
+      </head>
+      <body>
+        <h1>AIDA API</h1>
+        <ul>`;
+    menu += `<li><a href="/app/alumno">Alumnos</a></li>`;
+    menu += `<li><a href="/app/materia">Materias</a></li>`;
+    menu += `<li><a href="/app/carrera">Carreras</a></li>`;
+    menu += `<li><a href="/app/materiasporcarrera">Materias por Carrera</a></li>`;
+    menu += `<li><a href="/app/alumnosporcarrera">Alumnos por Carrera</a></li>`;
+    menu += `<li><a href="/app/cursada">Cursadas</a></li>`;
     for (const operacion of operaciones) {
         if (operacion.visible) {
             menu += `<li><a href="./${operacion.operacion}">${operacion.descripcion}</a></li>`;
@@ -494,97 +284,145 @@ function apiBackend(operaciones: DefinicionesDeOperaciones) {
         app.get('/api/v0/'+operacion.operacion+'/:arg1', requireAuthAPI, async (req, res) => {
             console.log(req.params, req.query, req.body);
             const argumentos = [req.params.arg1 as string];
-            await orquestador(operaciones, [{operacion: operacion.operacion, argumentos }])
-            res.status(404).send(NO_IMPLEMENTADO);
+            const htmlVacio =
+               `<!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Certificados Múltiples</title>
+                    <style>
+                        .certificado-container {
+                          page-break-after: always;
+                          padding: 20px;
+                          border: 1px solid #ccc;
+                          margin-bottom: 20px;
+                      }
+                    </style>
+                </head>
+                <body>
+
+                </body>
+                </html>`.replace(/\s/g, '');
+            const resultado = await orquestador(operaciones, [{operacion: operacion.operacion, argumentos }]);
+            const resultadoLimpio = resultado ? resultado.replace(/\s/g, '') : '';
+            if (!resultado || resultadoLimpio === htmlVacio) {
+              res.status(404).send('No hay alumnos que necesiten certificado para ese filtro');
+            }else{
+              res.set('Content-Type', 'text/html');
+              res.status(200).send(resultado);
+            }
         })
     }
+    menu += `<li><a href="#" id="boton-logout" class="boton-logout">Cerrar sesión</a></li>`;
+    menu += `</ul>
+             <script>
+                document.getElementById('boton-logout').addEventListener('click', async function(event) {
+                    event.preventDefault();
+                    try { await fetch('/api/v0/auth/logout', {
+                            method: 'POST'
+                        });
+                        window.location.href = '/app/login'; }
+                    catch (error) { console.error('Error al cerrar sesión:', error); }
+                });
+             </script>`;
 
-    app.get('/app/menu', requireAuth, (req, res) => {
-        const usuario = req.session.usuario;
-        const menuHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf8">
-                <title>AIDA - Menú Principal</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        max-width: 800px;
-                        margin: 50px auto;
-                        padding: 20px;
-                    }
-                    .header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 30px;
-                        padding-bottom: 20px;
-                        border-bottom: 2px solid #667eea;
-                    }
-                    .user-info {
-                        color: #666;
-                    }
-                    .logout-btn {
-                        background: #dc3545;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                    }
-                    .logout-btn:hover {
-                        background: #c82333;
-                    }
-                    ul {
-                        list-style: none;
-                        padding: 0;
-                    }
-                    li {
-                        margin: 10px 0;
-                    }
-                    a {
-                        color: #667eea;
-                        text-decoration: none;
-                        font-size: 18px;
-                    }
-                    a:hover {
-                        text-decoration: underline;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div>
-                        <h1>🎓 AIDA API</h1>
-                        <div class="user-info">
-                            Bienvenido, <strong>${usuario?.nombre || usuario?.username}</strong>
-                        </div>
-                    </div>
-                    <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
-                </div>
-                ${menu}
-            </body>
-            <script>
-                async function logout() {
-                    try {
-                        await fetch('/api/v0/auth/logout', { method: 'POST' });
-                        window.location.href = '/app/login';
-                    } catch (error) {
-                        console.error('Error al cerrar sesión:', error);
-                        alert('Error al cerrar sesión');
-                    }
-                }
-            </script>
-            </html>
-        `;
-        res.send(menuHtml);
+
+    app.get('/app/menu', requireAuth, (_, res) => {
+        res.send(menu)
     })
+
+    app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
+        const alumnosJson = req.body;
+        await cargarNovedadesAlumnosDesdeJson(alumnosJson);
+        res.status(200).send('<h1>Carga de datos JSON exitosa!</h1>');
+    });
 
     app.listen(port, () => {
-        console.log(`Example app listening on port http://localhost:${port}/app/menu`)
+        console.log(`Example app listening on port http://localhost:${port}/app/login`)
     })
+
 
 }
 
+//Llamada a programas
+
 apiBackend(operacionesAida);
+crearApiCrud(app, '/api/v0', requireAuthAPI)
+
+//Estilos
+app.get('/app/styleMenu.css', (_, res) => {
+    res.sendFile(`${process.cwd()}/styleMenu.css`);
+});
+
+app.get('/app/style.css', requireAuth, (_, res) => {
+    res.sendFile(`${process.cwd()}/style.css`);
+});
+
+
+// Diccionarios
+app.get('/app/diccionariosGetTablas', requireAuth, (_, res) => {
+        res.sendFile(`${process.cwd()}/diccionariosGetTablas.js`);
+    });
+
+app.get('/app/diccionarios.js', (_, res) => {
+    res.sendFile(`${process.cwd()}/diccionarios.js`);
+});
+
+// Tablas Aprobadas
+
+app.get('/app/aprobadas/:lu', requireAuth, async (req, res) => {
+    try{
+        const resultado:string = await chequearCantidadAprobadas(req.params.lu!);
+        if (resultado) {
+            res.set('Content-Type', 'text/html');
+            res.status(200).send(resultado);
+        }
+        else{
+            res.status(403).send('El alumno no aprobo todas las materias todavia');
+        }
+    } catch (error) {
+        console.error('Error al generar el certificado:', error);
+        res.status(500).send('Error al generar el certificado');
+    }
+});
+
+function getEndPoints(tabla: string) {
+    const datosTabla = DiccionariosTablas.find(t => t.tabla === tabla);
+    const titulo = datosTabla?.text;
+    app.get(`/app/${tabla}`, requireAuth, (_, res) => {
+        res.send(`<!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>${titulo}</title>
+            <link rel="stylesheet" href="/app/style.css">
+        </head>
+        <body>
+            <h2>loading...</h2>
+            <script src="/app/tablaGenerico.js" type="module"></script>
+        </body>
+        </html>`
+        );
+    });
+
+
+    app.get('/app/tablaGenerico.js', requireAuth, (_, res) => {
+        res.sendFile(`${process.cwd()}/tablaGenerico.js`);
+    });
+
+    const urlEdicion = datosTabla!.urlEdicion;
+    app.get(`${urlEdicion}:lu`, requireAuth, (_, res) => {
+        res.sendFile(`${process.cwd()}/editarGenerico.html`);
+    });
+    const urlCreacion = datosTabla!.urlCreacion;
+    app.get(`${urlCreacion}`, requireAuth, (_, res) => {
+        res.sendFile(`${process.cwd()}/crearGenerico.html`);
+    });
+
+}
+
+getEndPoints('alumno');
+getEndPoints('materia');
+getEndPoints('carrera');
+getEndPoints('materiasporcarrera');
+getEndPoints('alumnosporcarrera');
+getEndPoints('cursada');

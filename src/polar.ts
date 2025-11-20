@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { watch } from 'fs/promises';
 import * as Paht from 'path';
 import { setImmediate } from 'timers/promises';

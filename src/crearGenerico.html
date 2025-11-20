@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle"></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .form-group label {
+            flex-basis: 150px;
+            font-weight: bold;
+            color: #555;
+            margin-right: 20px;
+        }
+        .data-input {
+            flex-grow: 1;
+        }
+        .data-input input[type="text"],
+        .data-input input[type="number"],
+        .data-input input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1></h1>
+    <form id="form-creacion">
+</div>
+
+<script src="/app/diccionarios.js"></script>
+<script>
+
+    function crearFormulario(campo) {
+        return `
+        <div class="form-group">
+            <label for="${campo.id}">${campo.Titulo}</label>
+            <div class="data-input">
+                <input type="${campo.tipo}" id="${campo.nuevoNombre}" name="${campo.nombre}" value="">
+            </div>
+        </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 2];
+        console.log(tabla);
+        if (window.TituloPorTabla) {
+            const tituloConfig = window.TituloPorTabla.find(t => t.tabla === tabla);
+            if (tituloConfig) {
+                document.title = tituloConfig.Titulo;
+                document.querySelector('h1').textContent = tituloConfig.Titulo;
+            }
+        }
+        const form = document.getElementById('form-creacion');
+        form.innerHTML = '';
+        if (window.CamposPorTabla) {
+            const camposConfig = window.CamposPorTabla.find(c => c.tabla === tabla);
+            for(const campo of camposConfig.campos) {
+                form.innerHTML += crearFormulario(campo);
+            }
+            form.innerHTML += '<button type="submit">Guardar Cambios</button>';
+        }
+    });
+</script>
+<script>
+
+    function inicializarDatos() {
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 2];
+        const datosIniciales = window.InicializarDatosPorTabla.find(d => d.tabla === tabla);
+        if(datosIniciales){
+            for(const [nuevoNombre, valorInicial] of Object.entries(datosIniciales.campos)){
+                document.getElementById(nuevoNombre).value = valorInicial;
+            }
+        }
+    }
+    window.onload = async function() {
+        try {
+
+            inicializarDatos();
+
+        } catch (error) {
+            console.error('Error al inicializar datos: ', error);
+        }
+    }
+    document.getElementById('form-creacion').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 2];
+        const form = event.target;
+        const campos = window.CamposPorTabla.find(c => c.tabla === tabla).campos;
+        const datosCreados = window.DatosCreadosPorTabla.find(d => d.tabla === tabla).datosCreados;
+        for(const campo of campos){
+            datosCreados[campo.id] = form[campo.id].value || null;
+        }
+        try{
+            var req = await fetch('http://localhost:3000/api/v0/' + (tabla === 'alumno' ? 'alumnos' : tabla), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosCreados)
+            });
+            if (req.ok) {
+                if(tabla == 'cursada'){
+                    if(datosCreados['nota'] >= 4){
+                        const resultado = await fetch('http://localhost:3000/app/aprobadas/' + encodeURIComponent(datosCreados['lu']), {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+
+                        });
+                        if(resultado.status == 200){
+                            const certificadoHTML = await resultado.text();
+                            const nuevaVentana = window.open('', '_blank');
+                            nuevaVentana.document.write('<html><head><title>Certificado</title>');
+                            nuevaVentana.document.write('</head><body>');
+                            nuevaVentana.document.write(certificadoHTML);
+                            nuevaVentana.document.write('</body></html>');
+                            nuevaVentana.document.close();
+                        }
+                    }
+                }
+                alert('Datos Creados correctamente.');
+                window.location.href = '/app/' + tabla;
+            }
+        }
+        catch(error){
+            console.error('Error al añadir los datos: ', error);
+            alert('Error al crear los datos.');
+        }
+    });
+</script>
+</body>
+</html>

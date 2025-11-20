@@ -1,0 +1,46 @@
+body {
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: #333;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin: 10px 0;
+}
+
+a {
+    text-decoration: none;
+    color: #3498db;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background 0.3s, color 0.3s;
+}
+
+a:hover {
+    background-color: #2980b9;
+    color: #fff;
+}
+
+
+.boton-logout {
+  display: inline-block;
+  background: #e74c3c;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .15s ease;
+}
+.boton-logout:hover {
+  background: #c0392b;
+}
+

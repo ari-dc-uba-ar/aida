@@ -22,7 +22,7 @@ function parsearParametros(){
 
 async function principal(){
     var listaDeEjecucion = parsearParametros();
-    orquestador(operacionesAida, listaDeEjecucion)
+    await orquestador(operacionesAida, listaDeEjecucion)
 }
 
 principal();

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle"></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .form-group label {
+            flex-basis: 150px;
+            font-weight: bold;
+            color: #555;
+            margin-right: 20px;
+        }
+
+        .data-current {
+            flex-basis: 250px;
+            padding: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            color: #6c757d;
+            margin-right: 20px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .data-input {
+            flex-grow: 1;
+        }
+
+        .data-input input[type="text"],
+        .data-input input[type="number"],
+        .data-input input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #nuevaLU {
+            background-color: #f8d7da;
+            color: #721c24;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1></h1>
+
+    <form id="form-edicion">
+</div>
+
+<script src="/app/diccionarios.js"></script>
+<script>
+
+    function crearFormulario(campo) {
+        return `
+        <div class="form-group">
+            <label for="${campo.id}">${campo.Titulo}</label>
+            <div class="data-current" id="${campo.nombreActual}">---</div>
+            <div class="data-input">
+                <input type="${campo.tipo}" id="${campo.nuevoNombre}" name="${campo.Nombre}" value=""
+                ${campo.placeholder ? `placeholder="${campo.placeholder}"` : ''}
+                ${campo.disabled ? 'disabled' : ''}>
+            </div>
+        </div>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 3];
+        if (window.TituloEditarPorTabla) {
+            const tituloConfig = window.TituloEditarPorTabla.find(t => t.tabla === tabla);
+            if (tituloConfig) {
+                document.title = tituloConfig.TituloEditar;
+                document.querySelector('h1').textContent = tituloConfig.TituloEditar;
+            }
+        }
+        const form = document.getElementById('form-edicion');
+        form.innerHTML = '';
+        if (window.CamposParaEditarPorTabla) {
+            const camposConfig = window.CamposParaEditarPorTabla.find(c => c.tabla === tabla);
+            for(const campo of camposConfig.campos) {
+                form.innerHTML += crearFormulario(campo);
+            }
+            form.innerHTML += '<button type="submit">Guardar Cambios</button>';
+        }
+    });
+</script>
+
+
+<script>
+
+    function cargarDatos(alumno) {
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 3];
+        const datosIniciales = window.CargarDatos.find(d => d.tabla === tabla);
+        if(datosIniciales){
+            for([clave, {id, nombreActual, nuevoNombre, fecha }] of Object.entries(datosIniciales.campos)){
+                if(fecha){
+                    const valorInicial = alumno[id] ? alumno[id].slice(0,10) : 'dd/mm/yy';
+                    document.getElementById(nombreActual).textContent = valorInicial;
+                    document.getElementById(nuevoNombre).value = valorInicial;
+                }
+                else{
+                    const valorInicial = alumno[id];
+                    document.getElementById(nombreActual).textContent = valorInicial;
+                    document.getElementById(nuevoNombre).value = valorInicial;
+                }
+            }
+        }
+    }
+
+    function ObtenerLU() {
+        const reemplazarBarra = window.location.pathname.replace(/\/$/, '');
+        const partes = reemplazarBarra.split('/');
+        const luCodificado = partes[partes.length - 1];
+        return decodeURIComponent(luCodificado);
+    }
+
+window.onload = async function() {
+    const partes = window.location.pathname.split('/');
+    const tabla = partes[partes.length - 3];
+    let idActual = '';
+    if(tabla == 'alumno'){
+        idActual = ObtenerLU();
+    }
+    else if (tabla == 'alumnosporcarrera' || tabla == 'cursada'){
+        id = partes[partes.length -1];
+        lu = id.split('_')[0];
+        luActual = decodeURIComponent(lu);
+        idActual = luActual;
+        for(let i = 1; (i < id.split('_').length); i++){
+            idActual += '_' + id.split('_')[i];
+        }
+    }
+    else{
+        idActual = partes[partes.length - 1];
+    }
+    try {
+
+        var req = await fetch('http://localhost:3000/api/v0/' + (tabla === 'alumno' ? 'alumnos' : tabla) + '/' + encodeURIComponent(idActual),{
+            method: 'GET'
+        });
+        var data = await req.json();
+        cargarDatos(data);
+
+    } catch (error) {
+        console.error('Error al cargar datos: ', error);
+    }
+
+    document.getElementById('form-edicion').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const partes = window.location.pathname.split('/');
+        const tabla = partes[partes.length - 3];
+        const campos = window.CamposPorTabla.find(c => c.tabla === tabla).campos;
+        const datosEditados = window.DatosEditadosPorTabla.find(d => d.tabla === tabla).datosEditados;
+        for(const campo of campos){
+            datosEditados[campo.id] = form[campo.nuevoNombre].value || null;
+        }
+        try{
+            var req = await fetch('http://localhost:3000/api/v0/' + (tabla === 'alumno' ? 'alumnos' : tabla) + '/' + encodeURIComponent(idActual), {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosEditados)
+            });
+            if (req.ok) {
+                alert('Datos actualizados correctamente.');
+                window.location.href = '/app/' + tabla;
+            }
+        }
+        catch(error){
+            console.error('Error al actualizar datos: ', error);
+            alert('Error al actualizar los datos.');
+        }
+    });
+};
+</script>
+
+</body>
+</html>
+
